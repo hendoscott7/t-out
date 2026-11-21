@@ -3,8 +3,6 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0b0b0b" media="(prefers-color-scheme: dark)">
 <title>T-Out</title>
 <style>
   /* VOICE  plain, confident, a dad's Saturday tool
@@ -801,7 +799,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     .stage { grid-template-columns:minmax(0, 1fr); margin-top:20px; align-items:stretch; }
     .well { gap:16px; }
     /* the map fills the whole screen, under Safari's bars too; everything else floats on it */
-    .map { position:fixed; left:0; right:0; top:0; height:100lvh; width:auto; margin:0; border-radius:0; }
+    .map { position:absolute; left:0; right:0; top:0; height:100lvh; width:auto; margin:0; border-radius:0; }
     .mast, .ask { position:relative; z-index:2; }
     .map .leaflet-top { top:calc(var(--top, 200px) - 48px); }
     .scrim { display:block; position:fixed; left:0; right:0; top:0; height:var(--top, 200px); z-index:1; pointer-events:none;
