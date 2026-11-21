@@ -813,7 +813,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     .handle::before { content:""; position:absolute; left:50%; top:10px; width:40px; height:4px; margin-left:-20px; border-radius:2px; background:var(--faint); }
     .card.shut { padding-bottom:16px; }
     .card.shut > :not(.handle):not(.peek) { display:none; }
-    .card.shut .peek { display:flex; align-items:center; gap:16px; margin-top:-4px; }
+    .card.shut .peek { display:flex; align-items:center; gap:16px; margin-top:-4px; min-height:36px; }
     .peek .pn { flex:1; font-size:20px; font-weight:700; letter-spacing:-.03em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .card.idle .peek .pn { color:var(--soft); font-weight:500; }
     .card h2 { font-size:34px; margin-top:16px; }
@@ -1098,11 +1098,11 @@ svg.leaflet-image-layer.leaflet-interactive path {
   function renderCard(animate) {
     const c = $('card'), p = current, n = state.places.filter(fits).length;
     c.classList.toggle('idle', !p); c.classList.remove('landed');
-    const peek = `<div class="peek"><span class="pn">${p ? esc(p.name) : n ? 'Where to?' : 'Nothing fits'}</span><button class="act round" data-a="pick" aria-label="${p ? 'Another' : 'Pick'}" ${n ? '' : 'disabled'}>${REFRESH}</button></div>`;
+    const peek = `<div class="peek"><span class="pn">${p ? esc(p.name) : n ? 'Where to?' : 'Nothing fits'}</span>${p ? `<button class="act round" data-a="pick" aria-label="Another">${REFRESH}</button>` : ''}</div>`;
     if (!p) {
       c.innerHTML = HANDLE + peek + `<h2>${n ? 'Where to, Theo?' : 'Nothing fits.'}</h2>
         <p class="where">${n ? 'Further out means a longer drive.' : 'Tap an underlined word to loosen it.'}</p>
-        <div class="acts"><button class="act main" data-a="pick" ${n ? '' : 'disabled'}>${REFRESH}Pick for me</button></div>`;
+        <div class="acts"><button class="act main" data-a="pick" ${n ? '' : 'disabled'}>Pick for me</button></div>`;
     } else {
       c.innerHTML = HANDLE + peek + `<div class="meta"><span class="tag" style="--c:${ink(p)};--tint:${tint(p)}">${KINDS[p.kind]}</span><span class="facts">${WHERE[p.where]} · ${COST[p.cost]} · ${minsLabel(p.mins)}</span></div>
         <h2 data-a="edit" title="Edit">${esc(p.name)}</h2>
