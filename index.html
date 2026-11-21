@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>T-Out</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
+<style>
+  :root { color-scheme:light dark; --bg:#fff; --fg:#111; --on:#fff; --mute:#9a9a9a; --panel:#f3f2f0; --line:#e4e2dc; --sky:#a9cbe8;
+          --glass:rgba(255,255,255,.82); --scrim:rgba(17,17,17,.18); --shadow:rgba(0,0,0,.10); --ring:rgba(0,0,0,.05); --hair:rgba(0,0,0,.08); }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0f0f0e; --fg:#f2f1ee; --on:#111; --mute:#7d7c78; --panel:#1c1c1a; --line:#2c2c29;
+            --glass:rgba(28,28,26,.78); --scrim:rgba(0,0,0,.45); --shadow:rgba(0,0,0,.45); --ring:rgba(255,255,255,.06); --hair:rgba(255,255,255,.12); }
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { font:400 15px/1.35 Inter, "Helvetica Neue", Arial, sans-serif; color:var(--fg); background:var(--bg);
+         min-height:100vh; min-height:100dvh; display:flex; flex-direction:column; padding:20px 24px 124px; gap:16px; }
+  .caps { text-transform:uppercase; letter-spacing:.06em; }
+  button, input, textarea, select { font:inherit; color:inherit; }
+  button { background:none; border:0; padding:0; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  a { color:inherit; }
+  svg { display:block; }
+  [hidden] { display:none !important; }
+
+  header { display:flex; justify-content:space-between; align-items:center; }
+  .mark { font-weight:600; font-size:20px; letter-spacing:-.01em; }
+  .actions { display:flex; gap:8px; }
+  .iconbtn { width:44px; height:44px; border-radius:14px; background:var(--panel); display:grid; place-items:center; position:relative; }
+  .iconbtn:active { transform:scale(.94); }
+  .iconbtn.on { background:var(--fg); color:var(--on); }
+  .badge { position:absolute; top:-4px; right:-4px; min-width:18px; height:18px; padding:0 5px; border-radius:9px;
+           background:var(--fg); color:var(--on); font-size:11px; font-weight:600; display:grid; place-items:center; }
+  .iconbtn.on .badge { background:var(--sky); color:#111; }
+
+  /* quick filters */
+  .quick { display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; margin:0 -24px; padding:0 24px; }
+  .quick::-webkit-scrollbar { display:none; }
+  .chip { flex:none; background:var(--panel); border-radius:12px; padding:9px 13px; font-size:14px; white-space:nowrap; transition:background .15s, color .15s; }
+  .chip.on { background:var(--fg); color:var(--on); }
+
+  /* pick panel */
+  .panel { background:var(--panel); flex:1; min-height:46vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
+           padding:32px 24px; text-align:center; overflow:hidden; border-radius:16px; position:relative; }
+  #meta { font-size:12px; color:var(--mute); min-height:16px; margin-bottom:14px; }
+  #pick { font-size:clamp(36px, 7vw, 76px); font-weight:500; letter-spacing:-.025em; line-height:1.05; max-width:13ch; }
+  #pick.empty { color:var(--mute); }
+  #area { margin-top:10px; color:var(--mute); font-size:16px; min-height:21px; }
+  #note { margin-top:18px; max-width:32ch; font-size:15px; line-height:1.4; }
+  #go { margin-top:22px; display:inline-flex; align-items:center; gap:8px; padding:11px 16px; border-radius:12px; background:var(--bg); text-decoration:none; font-size:13px; }
+  #pick.shuffle { opacity:.25; filter:blur(1.5px); }
+  #pick.land, .landed { animation:land .35s cubic-bezier(.2,.8,.2,1); }
+  @keyframes land { from { opacity:0; transform:translateY(10px) scale(.98); } to { opacity:1; transform:none; } }
+  .count { position:absolute; bottom:14px; left:0; right:0; font-size:12px; color:var(--mute); }
+
+  /* list */
+  #listView { flex:1; }
+  .seg { display:flex; background:var(--panel); border-radius:12px; padding:3px; margin-bottom:14px; }
+  .seg button { flex:1; padding:9px 0; border-radius:10px; font-size:14px; }
+  .seg button.on { background:var(--bg); box-shadow:0 1px 3px var(--shadow); }
+  .group { color:var(--mute); font-size:12px; margin:20px 0 4px; }
+  .rows { list-style:none; padding:0; }
+  .rows li { border-bottom:1px solid var(--line); }
+  .rows button { width:100%; text-align:left; display:flex; align-items:center; gap:12px; padding:13px 0; }
+  .rows .t { flex:1; min-width:0; }
+  .rows .n { font-size:17px; display:flex; align-items:center; gap:8px; }
+  .rows .m { font-size:13px; color:var(--mute); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .rows .dot { width:6px; height:6px; border-radius:50%; background:var(--fg); flex:none; }
+  .rows .dot.check { background:#e5884d; }
+  .rows .been { font-size:12px; color:var(--mute); flex:none; }
+  .empty-list { color:var(--mute); padding:40px 0; text-align:center; }
+
+  /* dock */
+  .dock { position:fixed; left:50%; bottom:20px; transform:translateX(-50%); z-index:10; display:flex; gap:6px; padding:6px;
+          background:var(--glass); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px); border-radius:20px;
+          box-shadow:0 10px 32px var(--shadow), 0 0 0 1px var(--ring); -webkit-user-select:none; user-select:none; }
+  .dock button { background:var(--panel); height:58px; width:66px; border-radius:14px; display:grid; place-items:center; transition:opacity .15s, transform .1s; }
+  .dock button:active { transform:scale(.97); }
+  .dock button:disabled { opacity:.35; cursor:default; }
+  .dock button.on { background:var(--fg); color:var(--on); }
+  .dock #spin { width:150px; background:var(--fg); color:var(--on); font-size:16px; }
+
+  /* sheets */
+  .modal { position:fixed; inset:0; z-index:20; background:var(--scrim); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+           display:flex; align-items:flex-end; justify-content:center; animation:fade .18s ease; }
+  .sheet { width:min(560px, 100%); max-height:88vh; overflow:auto; background:var(--bg); border-radius:22px 22px 0 0;
+           padding:10px 24px calc(24px + env(safe-area-inset-bottom)); box-shadow:0 -10px 40px var(--shadow), 0 0 0 1px var(--ring); animation:up .28s cubic-bezier(.2,.8,.2,1); }
+  .grab { width:40px; height:4px; border-radius:4px; background:var(--line); margin:0 auto 18px; }
+  .sheet h2 { font-size:28px; font-weight:500; letter-spacing:-.02em; line-height:1.1; margin-bottom:6px; }
+  .sheet h3 { font-size:12px; font-weight:400; color:var(--mute); margin:20px 0 8px; }
+  .sheet p.sub { color:var(--mute); }
+  .opts { display:flex; flex-wrap:wrap; gap:6px; }
+  .field { width:100%; background:var(--panel); border:0; border-radius:12px; padding:12px 14px; outline:none; }
+  textarea.field { min-height:120px; resize:vertical; font-size:14px; }
+  .done { width:100%; margin-top:22px; padding:16px; border-radius:14px; background:var(--fg); color:var(--on); display:grid; place-items:center; }
+  .row2 { display:flex; gap:8px; margin-top:22px; }
+  .row2 button, .row2 a { flex:1; padding:14px; border-radius:14px; background:var(--panel); display:grid; place-items:center; text-decoration:none; font-size:13px; }
+  .row2 .danger { color:#d6453d; }
+  .hint { font-size:13px; color:var(--mute); line-height:1.5; margin-top:10px; }
+  .hint ol { padding-left:18px; }
+
+  .toast { position:fixed; left:50%; bottom:100px; z-index:30; border-radius:12px; transform:translate(-50%,16px); background:var(--fg); color:var(--on);
+           padding:14px 18px; display:flex; gap:18px; opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; font-size:13px; width:max-content; max-width:calc(100vw - 32px); line-height:1.4; }
+  .toast.show { opacity:1; transform:translate(-50%,0); pointer-events:auto; }
+  .toast button { text-decoration:underline; text-underline-offset:3px; }
+
+  @keyframes up { from { transform:translateY(100%); } }
+  @keyframes fade { from { opacity:0; } }
+  @media (max-width:720px) {
+    body { padding:16px 16px 116px; }
+    .quick { margin:0 -16px; padding:0 16px; }
+    .dock { bottom:16px; }
+    .dock #spin { width:130px; }
+  }
+  @media (prefers-reduced-motion: reduce) { #pick.land, .landed, .sheet, .modal { animation:none; } }
+</style>
+</head>
+<body>
+  <header>
+    <div class="mark">T-Out</div>
+    <div class="actions">
+      <button class="iconbtn" id="openAdd" aria-label="Add places"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+      <button class="iconbtn" id="openFilters" aria-label="Filters"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg><span class="badge" id="fBadge" hidden></span></button>
+    </div>
+  </header>
+
+  <nav class="quick" id="quick"></nav>
+
+  <section class="panel" id="pickView">
+    <div id="meta" class="caps"></div>
+    <div id="pick" class="empty">Where to, Theo?</div>
+    <div id="area"></div>
+    <div id="note" hidden></div>
+    <a id="go" class="caps" target="_blank" rel="noopener" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>Open in Maps</a>
+    <div class="count" id="count"></div>
+  </section>
+
+  <section id="listView" hidden>
+    <div class="seg" id="seg"><button data-v="all" class="on">All</button><button data-v="mine">Ours</button><button data-v="ideas">Ideas</button></div>
+    <div id="rows"></div>
+  </section>
+
+  <div class="dock caps">
+    <button id="listBtn" aria-label="List"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M5 7h14M5 12h14M5 17h9"/></svg></button>
+    <button id="spin">Pick</button>
+    <button id="been" aria-label="Been" disabled><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5L19.5 7"/></svg></button>
+  </div>
+
+  <!-- filters -->
+  <div class="modal" id="filters" hidden>
+    <div class="sheet"><div class="grab"></div>
+      <h2>Today</h2><p class="sub">Only pick places that fit.</p>
+      <h3 class="caps">Weather</h3><div class="opts" data-f="wx"></div>
+      <h3 class="caps">Cost</h3><div class="opts" data-f="cost"></div>
+      <h3 class="caps">Travel</h3><div class="opts" data-f="near"></div>
+      <h3 class="caps">Mood</h3><div class="opts" data-f="energy"></div>
+      <h3 class="caps">Kind</h3><div class="opts" data-f="kinds"></div>
+      <h3 class="caps">From</h3><div class="opts" data-f="src"></div>
+      <div class="row2"><button class="caps" id="resetF">Reset</button><button class="caps" data-close style="background:var(--fg);color:var(--on)">Done</button></div>
+    </div>
+  </div>
+
+  <!-- edit -->
+  <div class="modal" id="edit" hidden>
+    <div class="sheet"><div class="grab"></div>
+      <input class="field" id="eName" style="font-size:22px;font-weight:500" aria-label="Name">
+      <input class="field" id="eArea" placeholder="Area, e.g. Dundonald" style="margin-top:8px" aria-label="Area">
+      <h3 class="caps">Inside or out</h3><div class="opts" data-e="where"></div>
+      <h3 class="caps">Cost</h3><div class="opts" data-e="cost"></div>
+      <h3 class="caps">Travel from home</h3><div class="opts" data-e="mins"></div>
+      <h3 class="caps">Mood</h3><div class="opts" data-e="energy"></div>
+      <h3 class="caps">Kind</h3><div class="opts" data-e="kind"></div>
+      <h3 class="caps">Note</h3><textarea class="field" id="eNote" style="min-height:70px" placeholder="Toddler mornings, bring wellies…"></textarea>
+      <h3 class="caps" id="eBeenH"></h3>
+      <div class="row2"><a class="caps" id="eMap" target="_blank" rel="noopener">Maps</a><button class="caps" id="eBeen">Been today</button><button class="caps danger" id="eDel">Remove</button></div>
+      <button class="done caps" data-close>Done</button>
+    </div>
+  </div>
+
+  <!-- add / import -->
+  <div class="modal" id="add" hidden>
+    <div class="sheet"><div class="grab"></div>
+      <h2>Add places</h2>
+      <p class="sub">Paste your Google “Want to go” export, or just type names, one per line. T-Out guesses the tags; tap a place to fix them.</p>
+      <textarea class="field" id="paste" style="margin-top:16px" placeholder="Victoria Park&#10;Streamvale Open Farm&#10;…"></textarea>
+      <div class="row2"><label class="caps" style="flex:1;padding:14px;border-radius:14px;background:var(--panel);display:grid;place-items:center;cursor:pointer">Choose CSV<input type="file" id="file" accept=".csv,text/csv,text/plain" hidden></label><button class="caps" id="doAdd" style="background:var(--fg);color:var(--on)">Add</button></div>
+      <div class="hint"><b>Getting your list out of Google Maps</b><ol><li>takeout.google.com → Deselect all</li><li>Tick <b>Saved</b> → Next → Export</li><li>Open the zip, pick <i>Want to go.csv</i></li></ol></div>
+      <div class="hint" style="margin-top:18px"><b>Backup</b> — your tags live in this browser. <a href="#" id="exportJ">Save a backup</a> · <a href="#" id="importJ">Restore</a><input type="file" id="jfile" accept=".json" hidden></div>
+    </div>
+  </div>
+
+  <div class="toast caps" id="toast"><span id="toastMsg"></span><button id="toastUndo" hidden>Undo</button></div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const LS = 't-out';
+
+  const KINDS = { park:'Park & playground', woods:'Woods & trails', beach:'Beach', animals:'Animals', play:'Soft play', museum:'Museum', space:'Space', group:'Groups & classes', market:'Market', other:'Other' };
+  const WHERE = { in:'Inside', out:'Outside', both:'Both' };
+  const COST = ['Free', '£', '££'];
+  const MINS = [10, 20, 30, 45, 60, 90];
+  const ENERGY = { run:'Run it off', calm:'Calm', mix:'Bit of both' };
+
+  // Ideas around Belfast for a ~20-month-old. Travel is rough driving time from the city centre.
+  // [id, name, area, kind, where, cost, mins, energy, note]
+  const IDEAS = [
+    ['victoria', 'Victoria Park', 'East Belfast', 'park', 'out', 0, 10, 'run', 'Lake full of swans, geese and ducks, plus a big playpark.'],
+    ['waterworks', 'Waterworks', 'Antrim Road', 'park', 'out', 0, 10, 'run', 'Ponds for duck spotting and two playgrounds.'],
+    ['botanic', 'Botanic Gardens', 'South Belfast', 'park', 'both', 0, 5, 'mix', 'Palm House and Tropical Ravine when it rains. Free council playgroup for under-5s on Thursday afternoons in the bowling pavilion.'],
+    ['ormeau', 'Ormeau Park', 'Ormeau Road', 'park', 'out', 0, 5, 'run', 'Refurbished lower playground and eco trails.'],
+    ['momowlam', 'Mo Mowlam Play Park', 'Stormont', 'park', 'out', 0, 15, 'run', 'Toddler area, sensory zone and inclusive kit. Free.'],
+    ['dixon', 'Sir Thomas & Lady Dixon Park', 'Malone', 'park', 'out', 0, 15, 'run', 'Meadows to run in and a playground.'],
+    ['cavehill', 'Cave Hill Country Park', 'North Belfast', 'park', 'out', 0, 15, 'run', 'Adventurous playground by the castle, woodland walks.'],
+    ['gruffalo', 'Gruffalo Trail, Colin Glen', 'West Belfast', 'woods', 'out', 0, 20, 'run', 'Ireland’s official Gruffalo Trail. Short, buggy-able, characters to find.'],
+    ['minnowburn', 'Minnowburn', 'Shaw’s Bridge', 'woods', 'out', 0, 15, 'mix', 'National Trust riverside and woods. Puddles guaranteed.'],
+    ['crawfordsburn', 'Crawfordsburn Country Park', 'Helen’s Bay', 'beach', 'out', 0, 25, 'run', 'Sandy beach, a waterfall walk and a café.'],
+    ['ulstermuseum', 'Ulster Museum', 'Botanic', 'museum', 'in', 0, 5, 'calm', 'Free. Discovery zones and a dinosaur or two.'],
+    ['folkmuseum', 'Ulster Folk & Transport Museum', 'Cultra', 'museum', 'both', 2, 20, 'mix', 'Trains, buses and an old village to wander.'],
+    ['w5', 'W5', 'Odyssey', 'museum', 'in', 2, 10, 'run', 'Science centre with a storybook under-8s area. Ticket lasts all day.'],
+    ['rhyme', 'Rhythm & Rhyme', 'Any Libraries NI branch', 'group', 'in', 0, 10, 'calm', 'Free songs and stories for 0–4s, about 30 minutes. Book ahead. Central Library is Wednesdays at 11.'],
+    ['market', 'St George’s Market', 'City centre', 'market', 'in', 0, 5, 'calm', 'Weekend market with live music and plenty to look at.'],
+    ['roar', 'Roar and Explore', 'Belfast', 'play', 'in', 1, 10, 'run', 'Animal-themed soft play with its own under-3s area. Cheaper toddler mornings on weekdays.'],
+    ['grove', 'Grove Wellbeing Centre soft play', 'York Road', 'play', 'in', 1, 10, 'run', 'Safari soft play, about £4. Free Rhythm & Rhyme on Fridays too.'],
+    ['funtastic', 'Funtastic', 'Carryduff', 'play', 'in', 1, 20, 'run', 'Soft play with a toddler area. Cheaper toddler mornings.'],
+    ['airtastic', 'Airtastic soft play', 'Newtownabbey', 'play', 'in', 1, 20, 'run', 'Weekday toddler mornings with juice and biscuits. Walk in, no booking.'],
+    ['zoo', 'Belfast Zoo', 'Cave Hill', 'animals', 'out', 2, 15, 'mix', 'Hilly, so take the buggy and go early.'],
+    ['streamvale', 'Streamvale Open Farm', 'Dundonald', 'animals', 'both', 1, 20, 'mix', 'Bottle-feed lambs, tractor rides, indoor play. Toddler tickets are cheap. Open spring to autumn, so check.'],
+    ['laganvale', 'Laganvale Farm', 'Lisburn', 'animals', 'both', 1, 20, 'mix', 'Farm and soft play. In term time the outdoor bit only opens on Saturdays.'],
+    ['stjames', 'St James Community Farm', 'West Belfast', 'animals', 'out', 1, 10, 'calm', 'Small city farm with about 50 animals. Check opening times.'],
+    ['exploris', 'Exploris Aquarium', 'Portaferry', 'animals', 'in', 2, 60, 'calm', 'Fish, rays and seal rescue. Good for a whole day out.'],
+    ['mountpanther', 'Mountpanther Farm Park', 'Clough, near Newcastle', 'animals', 'out', 1, 45, 'run', 'Bouncy pillow, sandpit, ride-on tractors and a small play village.'],
+    ['armagh', 'Armagh Planetarium', 'Armagh', 'space', 'in', 1, 60, 'calm', 'Under-3s go free. Pick the pre-school dome show; some shows are for over-6s or over-8s. Book ahead.'],
+  ];
+
+  const blank = () => ({ v:1, places:[], last:[], f:{ wx:'any', cost:'any', near:0, energy:'any', kinds:[], src:'all' }, list:'all', seeded:[] });
+  let state;
+  try { state = JSON.parse(localStorage.getItem(LS)) || blank(); } catch (e) { state = blank(); }
+  state = Object.assign(blank(), state); state.f = Object.assign(blank().f, state.f);
+  // add any ideas we haven't seen before (never re-adds ones you removed)
+  IDEAS.forEach(([id, name, area, kind, where, cost, mins, energy, note]) => {
+    if (state.seeded.includes(id)) return;
+    state.seeded.push(id);
+    state.places.push({ id, name, area, kind, where, cost, mins, energy, note, mine:false, been:[] });
+  });
+  const save = () => { try { localStorage.setItem(LS, JSON.stringify(state)); } catch (e) {} };
+  save();
+
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+  const mapUrl = p => p.url || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name + ' ' + (p.area || '') + ' Northern Ireland')}`;
+  const minsLabel = m => m >= 90 ? '90+ min' : m + ' min';
+  const metaOf = p => [KINDS[p.kind], WHERE[p.where], COST[p.cost], minsLabel(p.mins)].join(' · ');
+  const today = () => new Date().toISOString().slice(0, 10);
+  const ago = d => { const n = Math.round((Date.now() - new Date(d)) / 864e5); return n <= 0 ? 'today' : n === 1 ? 'yesterday' : n < 14 ? n + ' days ago' : n < 60 ? Math.round(n / 7) + ' weeks ago' : Math.round(n / 30) + ' months ago'; };
+
+  // ---------- filtering ----------
+  const FOPTS = {
+    wx: { any:'Any', rain:'Raining', dry:'Dry' },
+    cost: { any:'Any', free:'Free only', cheap:'Free or £' },
+    near: { 0:'Any', 15:'≤ 15 min', 30:'≤ 30 min', 60:'≤ 1 hour' },
+    energy: { any:'Any', run:'Run it off', calm:'Calm' },
+    src: { all:'Everything', mine:'Our list', ideas:'Ideas' },
+  };
+  function fits(p, f = state.f) {
+    if (f.wx === 'rain' && p.where === 'out') return false;
+    if (f.wx === 'dry' && p.where === 'in') return false;
+    if (f.cost === 'free' && p.cost > 0) return false;
+    if (f.cost === 'cheap' && p.cost > 1) return false;
+    if (+f.near && p.mins > +f.near) return false;
+    if (f.energy !== 'any' && p.energy !== f.energy && p.energy !== 'mix') return false;
+    if (f.kinds.length && !f.kinds.includes(p.kind)) return false;
+    if (f.src === 'mine' && !p.mine) return false;
+    if (f.src === 'ideas' && p.mine) return false;
+    return true;
+  }
+  const pool = () => state.places.filter(p => fits(p));
+  const activeCount = () => ['wx', 'cost', 'energy'].filter(k => state.f[k] !== 'any').length + (+state.f.near ? 1 : 0) + (state.f.kinds.length ? 1 : 0) + (state.f.src !== 'all' ? 1 : 0);
+
+  // quick chips: the filters you reach for on a Saturday morning
+  const QUICK = [
+    ['Raining', () => state.f.wx === 'rain', () => state.f.wx = state.f.wx === 'rain' ? 'any' : 'rain'],
+    ['Free', () => state.f.cost === 'free', () => state.f.cost = state.f.cost === 'free' ? 'any' : 'free'],
+    ['Close by', () => +state.f.near === 15, () => state.f.near = +state.f.near === 15 ? 0 : 15],
+    ['Run it off', () => state.f.energy === 'run', () => state.f.energy = state.f.energy === 'run' ? 'any' : 'run'],
+    ['Never been', () => state.f.fresh, () => state.f.fresh = !state.f.fresh],
+    ['Our list', () => state.f.src === 'mine', () => state.f.src = state.f.src === 'mine' ? 'all' : 'mine'],
+  ];
+  const fitsAll = p => fits(p) && (!state.f.fresh || !p.been.length);
+
+  function renderQuick() {
+    $('quick').innerHTML = QUICK.map(([l, on], i) => `<button class="chip ${on() ? 'on' : ''}" data-i="${i}">${l}</button>`).join('');
+    const n = activeCount() + (state.f.fresh ? 1 : 0);
+    $('fBadge').hidden = !n; $('fBadge').textContent = n; $('openFilters').classList.toggle('on', !!n);
+    const c = state.places.filter(fitsAll).length;
+    $('count').textContent = c === state.places.length ? `${c} places` : `${c} of ${state.places.length} places fit`;
+  }
+  $('quick').addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; QUICK[b.dataset.i][2](); save(); refresh(); });
+
+  // ---------- pick ----------
+  let current = null;
+  function weight(p) {
+    let w = p.been.length ? 1 : 2.5;           // new places come up more
+    if (p.mine) w *= 1.6;                      // your own list over ideas
+    const i = state.last.indexOf(p.id);
+    if (i > -1) w *= 0.05 + i * 0.12;          // recent picks rarely repeat
+    if (p.been.length && (Date.now() - new Date(p.been[p.been.length - 1])) < 7 * 864e5) w *= 0.2;
+    return w;
+  }
+  function choose() {
+    const c = state.places.filter(fitsAll).filter(p => p !== current);
+    if (!c.length) return null;
+    let r = Math.random() * c.reduce((s, p) => s + weight(p), 0);
+    for (const p of c) { r -= weight(p); if (r <= 0) return p; }
+    return c[c.length - 1];
+  }
+  function show(p, animate) {
+    current = p;
+    $('been').disabled = !p;
+    const pk = $('pick');
+    if (!p) {
+      pk.className = 'empty'; pk.textContent = state.places.filter(fitsAll).length ? 'Where to, Theo?' : 'Nothing fits. Loosen a filter?';
+      ['meta', 'area'].forEach(k => $(k).textContent = ''); $('note').hidden = $('go').hidden = true; return;
+    }
+    pk.className = animate ? 'land' : ''; pk.textContent = p.name;
+    $('meta').textContent = metaOf(p);
+    $('area').textContent = [p.area, p.been.length ? 'last went ' + ago(p.been[p.been.length - 1]) : 'never been'].filter(Boolean).join(' · ');
+    $('note').hidden = !p.note; $('note').textContent = p.note || '';
+    $('go').hidden = false; $('go').href = mapUrl(p);
+    $('been').classList.toggle('on', p.been.includes(today()));
+  }
+  let spinning = false;
+  $('spin').addEventListener('click', () => {
+    if (!$('listView').hidden) setView('pick');
+    if (spinning) return;
+    const final = choose();
+    if (!final) { show(null); toast('Nothing fits those filters'); return; }
+    spinning = true;
+    const names = state.places.filter(fitsAll).map(p => p.name);
+    let n = 0; const pk = $('pick'); pk.className = 'shuffle';
+    const t = setInterval(() => {
+      pk.textContent = names[Math.floor(Math.random() * names.length)];
+      if (++n > 9) {
+        clearInterval(t); spinning = false;
+        state.last = [final.id, ...state.last.filter(x => x !== final.id)].slice(0, 6); save();
+        show(final, true);
+      }
+    }, 60);
+  });
+  $('been').addEventListener('click', () => { if (current) { toggleBeen(current); show(current); } });
+  $('pick').addEventListener('click', () => current && openEdit(current));
+
+  function toggleBeen(p) {
+    const d = today();
+    if (p.been.includes(d)) { p.been = p.been.filter(x => x !== d); toast('Unmarked'); }
+    else { p.been.push(d); toast('Nice one. Logged ' + p.name); }
+    save(); renderQuick();
+  }
+
+  // ---------- list ----------
+  function setView(v) {
+    $('pickView').hidden = v !== 'pick'; $('listView').hidden = v !== 'list';
+    $('listBtn').classList.toggle('on', v === 'list');
+    if (v === 'list') renderList();
+  }
+  $('listBtn').addEventListener('click', () => setView($('listView').hidden ? 'list' : 'pick'));
+  $('seg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; state.list = b.dataset.v; save(); renderList(); });
+  function renderList() {
+    [...$('seg').children].forEach(b => b.classList.toggle('on', b.dataset.v === state.list));
+    const ps = state.places.filter(p => state.list === 'all' || (state.list === 'mine') === !!p.mine).filter(fitsAll);
+    if (!ps.length) { $('rows').innerHTML = `<p class="empty-list">${state.list === 'mine' ? 'Nothing from your list yet. Tap + to paste it in.' : 'Nothing matches these filters.'}</p>`; return; }
+    $('rows').innerHTML = Object.keys(KINDS).map(k => {
+      const g = ps.filter(p => p.kind === k).sort((a, b) => a.mins - b.mins || a.name.localeCompare(b.name));
+      if (!g.length) return '';
+      return `<div class="group caps">${KINDS[k]} · ${g.length}</div><ul class="rows">${g.map(p => `
+        <li><button data-id="${esc(p.id)}"><span class="t"><span class="n">${p.mine ? `<span class="dot${p.guessed ? ' check' : ''}" title="${p.guessed ? 'Tags guessed — check them' : 'From your list'}"></span>` : ''}${esc(p.name)}</span>
+        <span class="m">${esc([WHERE[p.where], COST[p.cost], minsLabel(p.mins), p.area].filter(Boolean).join(' · '))}</span></span>
+        <span class="been">${p.been.length ? '✓ ' + p.been.length : ''}</span></button></li>`).join('')}</ul>`;
+    }).join('');
+  }
+  $('rows').addEventListener('click', e => { const b = e.target.closest('[data-id]'); if (b) openEdit(state.places.find(p => p.id === b.dataset.id)); });
+
+  // ---------- sheets ----------
+  const open = id => { $(id).hidden = false; };
+  const close = m => { m.hidden = true; };
+  document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => {
+    if (e.target === m || e.target.closest('[data-close]')) { close(m); if (m.id === 'edit') commitEdit(); refresh(); }
+  }));
+
+  function opts(el, map, isOn, onPick) {
+    el.innerHTML = Object.entries(map).map(([k, l]) => `<button class="chip ${isOn(k) ? 'on' : ''}" data-k="${k}">${l}</button>`).join('');
+    el.onclick = e => { const b = e.target.closest('.chip'); if (b) { onPick(b.dataset.k); save(); } };
+  }
+  function renderFilters() {
+    const f = state.f, q = s => document.querySelector(`[data-f="${s}"]`), re = () => { renderFilters(); renderQuick(); };
+    ['wx', 'cost', 'near', 'energy', 'src'].forEach(k => opts(q(k), FOPTS[k], v => String(f[k]) === v, v => { f[k] = k === 'near' ? +v : v; re(); }));
+    opts(q('kinds'), KINDS, k => f.kinds.includes(k), k => { f.kinds = f.kinds.includes(k) ? f.kinds.filter(x => x !== k) : [...f.kinds, k]; re(); });
+  }
+  $('openFilters').addEventListener('click', () => { renderFilters(); open('filters'); });
+  $('resetF').addEventListener('click', () => { state.f = blank().f; save(); renderFilters(); renderQuick(); });
+
+  let editing = null;
+  function renderEdit() {
+    const p = editing, q = s => document.querySelector(`[data-e="${s}"]`);
+    opts(q('where'), WHERE, k => p.where === k, k => { p.where = k; renderEdit(); });
+    opts(q('cost'), Object.fromEntries(COST.map((c, i) => [i, c])), k => p.cost === +k, k => { p.cost = +k; renderEdit(); });
+    opts(q('mins'), Object.fromEntries(MINS.map(m => [m, minsLabel(m)])), k => p.mins === +k, k => { p.mins = +k; renderEdit(); });
+    opts(q('energy'), ENERGY, k => p.energy === k, k => { p.energy = k; renderEdit(); });
+    opts(q('kind'), KINDS, k => p.kind === k, k => { p.kind = k; renderEdit(); });
+    $('eBeenH').textContent = p.been.length ? `Been ${p.been.length}× · last ${ago(p.been[p.been.length - 1])}` : 'Not been yet';
+    $('eBeen').textContent = p.been.includes(today()) ? 'Unmark today' : 'Been today';
+    $('eMap').href = mapUrl(p);
+  }
+  function openEdit(p) {
+    editing = p; $('eName').value = p.name; $('eArea').value = p.area || ''; $('eNote').value = p.note || '';
+    renderEdit(); open('edit');
+  }
+  function commitEdit() {
+    if (!editing) return;
+    editing.name = $('eName').value.trim() || editing.name; editing.area = $('eArea').value.trim(); editing.note = $('eNote').value.trim();
+    delete editing.guessed; save();
+    if (current === editing) show(current);
+    editing = null;
+  }
+  $('eBeen').addEventListener('click', () => { toggleBeen(editing); renderEdit(); });
+  $('eDel').addEventListener('click', () => {
+    const p = editing, i = state.places.indexOf(p); editing = null;
+    state.places.splice(i, 1); save(); close($('edit'));
+    if (current === p) show(null);
+    refresh(); toast('Removed ' + p.name, () => { state.places.splice(i, 0, p); save(); refresh(); });
+  });
+
+  // ---------- import ----------
+  function guess(name, note = '') {
+    const s = (name + ' ' + note).toLowerCase();
+    const g = { kind:'other', where:'both', cost:1, mins:20, energy:'mix' };
+    const set = o => Object.assign(g, o);
+    if (/planetarium|observatory|space|science/.test(s)) set({ kind:'space', where:'in', cost:1, energy:'calm' });
+    else if (/soft ?play|play ?(centre|center|house|zone|barn)|jungle|monkey|bounce|trampolin|airtastic|funtastic|clip/.test(s)) set({ kind:'play', where:'in', cost:1, energy:'run' });
+    else if (/zoo/.test(s)) set({ kind:'animals', where:'out', cost:2 });
+    else if (/aquarium|exploris|sea ?life/.test(s)) set({ kind:'animals', where:'in', cost:2, energy:'calm' });
+    else if (/farm|pets|animal|alpaca|donkey|petting/.test(s)) set({ kind:'animals', where:'both', cost:1 });
+    else if (/library|rhyme|toddler group|class|sensory|music|tots/.test(s)) set({ kind:'group', where:'in', cost:0, energy:'calm' });
+    else if (/museum|gallery|w5|centre|castle/.test(s)) set({ kind:'museum', where:'in', cost:1, energy:'calm' });
+    else if (/beach|strand|bay|shore|harbour/.test(s)) set({ kind:'beach', where:'out', cost:0, energy:'run' });
+    else if (/forest|wood|glen|trail|walk|country park|nature|reserve/.test(s)) set({ kind:'woods', where:'out', cost:0, energy:'run' });
+    else if (/park|garden|playground|play ?park|demesne|green/.test(s)) set({ kind:'park', where:'out', cost:0, energy:'run' });
+    else if (/market/.test(s)) set({ kind:'market', where:'in', cost:0, energy:'calm' });
+    return g;
+  }
+  function parseCSV(t) {
+    const rows = []; let row = [], cell = '', q = false;
+    for (let i = 0; i < t.length; i++) {
+      const c = t[i];
+      if (q) { if (c === '"' && t[i + 1] === '"') { cell += '"'; i++; } else if (c === '"') q = false; else cell += c; }
+      else if (c === '"') q = true;
+      else if (c === ',') { row.push(cell); cell = ''; }
+      else if (c === '\n' || c === '\r') { if (c === '\r' && t[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
+      else cell += c;
+    }
+    if (cell || row.length) { row.push(cell); rows.push(row); }
+    return rows.filter(r => r.some(x => x.trim()));
+  }
+  function addFrom(text) {
+    text = text.replace(/^﻿/, '').trim(); if (!text) return 0;
+    let items;
+    const first = text.split(/\r?\n/)[0].toLowerCase();
+    if (/(^|,)\s*title\s*(,|$)/.test(first)) {
+      const [h, ...rows] = parseCSV(text), hl = h.map(x => x.trim().toLowerCase());
+      const ix = k => hl.indexOf(k);
+      items = rows.map(r => ({ name:(r[ix('title')] || '').trim(), note:[r[ix('note')], r[ix('comment')]].filter(x => x && x.trim()).join(' — '), url:(r[ix('url')] || '').trim() }));
+    } else {
+      items = text.split(/\r?\n/).map(l => ({ name:l.replace(/^[-•*\d.)\s]+/, '').trim(), note:'', url:'' }));
+    }
+    let n = 0;
+    const known = new Set(state.places.map(p => p.name.toLowerCase()));
+    items.filter(i => i.name).forEach(i => {
+      const k = i.name.toLowerCase();
+      if (known.has(k)) { const p = state.places.find(p => p.name.toLowerCase() === k); p.mine = true; if (i.url) p.url = i.url; return; }
+      known.add(k);
+      state.places.push({ id:'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name:i.name, area:'', note:i.note, url:i.url || undefined, mine:true, guessed:true, been:[], ...guess(i.name, i.note) });
+      n++;
+    });
+    save(); return n;
+  }
+  $('openAdd').addEventListener('click', () => open('add'));
+  $('doAdd').addEventListener('click', () => {
+    const n = addFrom($('paste').value); $('paste').value = '';
+    close($('add')); state.f = blank().f; state.list = 'mine'; setView('list'); refresh();
+    toast(n ? `Added ${n}. Orange dot means check the tags` : 'All already here — marked as yours');
+  });
+  $('file').addEventListener('change', e => {
+    const f = e.target.files[0]; if (!f) return;
+    f.text().then(t => { $('paste').value = t; e.target.value = ''; $('doAdd').click(); });
+  });
+  $('exportJ').addEventListener('click', e => {
+    e.preventDefault();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(state, null, 1)], { type:'application/json' }));
+    a.download = `t-out-${today()}.json`; a.click();
+  });
+  $('importJ').addEventListener('click', e => { e.preventDefault(); $('jfile').click(); });
+  $('jfile').addEventListener('change', e => {
+    const f = e.target.files[0]; if (!f) return;
+    f.text().then(t => { try { const s = JSON.parse(t); if (!Array.isArray(s.places)) throw 0; state = Object.assign(blank(), s); save(); close($('add')); refresh(); toast('Restored'); } catch (_) { toast('That file isn’t a T-Out backup'); } });
+  });
+
+  // ---------- toast ----------
+  let tt;
+  function toast(msg, undo) {
+    $('toastMsg').textContent = msg; $('toastUndo').hidden = !undo;
+    $('toastUndo').onclick = () => { undo && undo(); $('toast').classList.remove('show'); };
+    $('toast').classList.add('show'); clearTimeout(tt); tt = setTimeout(() => $('toast').classList.remove('show'), undo ? 4500 : 2200);
+  }
+
+  function refresh() {
+    renderQuick();
+    if (!$('listView').hidden) renderList();
+    if (current && !state.places.includes(current)) show(null);
+    if (!current) show(null);
+  }
+  refresh();
+})();
+</script>
+</body>
+</html>
