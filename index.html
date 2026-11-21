@@ -21,7 +21,7 @@
           --h3:#a596f5; --t3:rgba(165,150,245,.16); --h4:#e5c351; --t4:rgba(229,195,81,.15); --h5:#b5b5b0; --t5:rgba(181,181,176,.15); }
   * { box-sizing:border-box; margin:0; min-width:0; }
   html { background:var(--bg); }
-  @media (max-width:820px) { html, body { background:var(--paper); } }   /* matches the docked sheet, so Safari's bar blends into it */
+  /* page stays the true background colour (Safari's top bar picks it up); the docked sheet colours the bottom bar */
   body { font:400 15px/1.3 "Helvetica Neue", Helvetica, Arial, sans-serif; color:var(--ink); background:var(--bg); -webkit-font-smoothing:antialiased;
          height:100vh; height:100dvh; overflow:hidden; display:flex; flex-direction:column;
          padding:calc(24px + env(safe-area-inset-top)) 40px calc(24px + env(safe-area-inset-bottom)); }
@@ -806,7 +806,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     .mast, .ask { position:relative; z-index:2; }
     .map .leaflet-top { top:calc(var(--top, 200px) - 48px); }
     .scrim { display:block; position:fixed; left:0; right:0; top:0; height:var(--top, 200px); z-index:1; pointer-events:none;
-             background:linear-gradient(to bottom, var(--bg) 0, var(--bg) calc(100% - 56px), color-mix(in srgb, var(--bg) 0%, transparent)); }
+             background:var(--bg); -webkit-mask-image:linear-gradient(#000 calc(100% - 56px), transparent); mask-image:linear-gradient(#000 calc(100% - 56px), transparent); }
     .card.shut { touch-action:none; }
     .card { position:fixed; left:0; right:0; bottom:0; z-index:10; max-height:min(82dvh, 680px);
             padding:0 24px calc(24px + env(safe-area-inset-bottom)); border-radius:28px 28px 0 0; box-shadow:0 -8px 32px -12px var(--lift); touch-action:pan-y; }
