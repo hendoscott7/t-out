@@ -6,9 +6,8 @@ Live: https://hendoscott7.github.io/t-out/
 
 ## Using it
 
-- **The sentence** sets the filters: *"It's dry, run him ragged, free, every kind."* Tap any underlined phrase to cycle through its options. Grey means "any".
+- **The sentence** sets the filters: *"It's dry, free, every kind."* Tap any underlined phrase to cycle through its options. Grey means "any".
   - **Weather:** rain or shine / it's dry / it's raining. Each day it starts on Belfast's forecast.
-  - **Mood:** any mood / run him ragged / keep it calm.
   - **Price:** any price / free / cheap.
   - **Kind:** every kind, or one kind in its own colour (outdoors, animals, museums, groups, other). This is also the colour key for the map dots, and the coloured tag on each place. Soft play isn't a category; any soft play on your own list sits under other, with markets.
 - **The map** shows every place as a dot in its kind's colour. Places that don't fit the sentence fade out, and hollow dots are places you've been. Drag, pinch and tap as normal. The ⓘ shows the map credits.
@@ -24,7 +23,7 @@ Follows the phone's light or dark mode. Everything you change is saved in the br
 
 Everything is in `index.html`:
 
-- `IDEAS` lists each place: `[id, name, area, kind, inside/outside/both, cost 0–2, minutes from Belfast, mood, note]`.
+- `IDEAS` lists each place: `[id, name, area, kind, inside/outside/both, cost 0–2, minutes from Belfast, mood (unused), note]`.
 - `AT` gives each place's `[lat, lng]`. These are approximate.
 - Kinds and their colours: outdoors (park, woods, beach) green, animals rust, museums and space indigo, groups and markets ochre, other grey (`--h0`…`--h5` in the CSS).
 

@@ -963,7 +963,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   const blank = () => ({ v:3, places:[], last:[], f:blankF(), seeded:[] });
   let state;
   try { state = JSON.parse(localStorage.getItem(LS)) || blank(); } catch (e) { state = blank(); }
-  state = Object.assign(blank(), state); state.f = Object.assign(blankF(), state.f, { wx:'any', pool:'any', near:0 });   // weather comes fresh from the forecast
+  state = Object.assign(blank(), state); state.f = Object.assign(blankF(), state.f, { wx:'any', pool:'any', near:0, energy:'any' });   // weather comes fresh from the forecast
   IDEAS.forEach(([id, name, area, kind, where, cost, mins, energy, note]) => {
     if (state.seeded.includes(id)) return;
     state.seeded.push(id);
@@ -998,7 +998,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     };
     const b = (k, cap) => { const o = ASK[k].find(x => x[0] === state.f[k]) || ASK[k][0], t = cap ? o[1][0].toUpperCase() + o[1].slice(1) : o[1];
       return `<button data-k="${k}" class="${o[0] !== ASK[k][0][0] ? 'set' : 'any'}" aria-label="${k}: ${o[1]}. Tap to change">${t}</button>`; };
-    $('ask').innerHTML = `<span>${b('wx')},</span> <span>${b('energy')},</span> <span>${b('cost')},</span> <span>${kind()}.</span>`;
+    $('ask').innerHTML = `<span>${b('wx')},</span> <span>${b('cost')},</span> <span>${kind()}.</span>`;
   }
   $('ask').addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
