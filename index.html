@@ -836,12 +836,12 @@ svg.leaflet-image-layer.leaflet-interactive path {
     /* starts just below the status bar: Safari tints its top bar from whatever touches the top edge, and that should be the page's black, not the map's grey */
     .map { position:fixed; inset:env(safe-area-inset-top) 0 0 0; height:auto; width:auto; margin:0; border-radius:0; }
     .mast, .ask { position:relative; z-index:2; }
-    .map .leaflet-top { top:calc(var(--top, 200px) - 48px); }
-    .scrim { display:block; position:fixed; left:0; right:0; top:0; height:calc(var(--top, 200px) - 48px); z-index:1; background:var(--bg); }
+    .map .leaflet-top { top:calc(var(--top, 200px) + 4px); }
+    .scrim { display:block; position:fixed; left:0; right:0; top:0; height:var(--top, 200px); z-index:1; background:var(--bg); }
     /* same fade at the bottom: a solid strip on the edge (Safari's bar takes its colour) melting up into the map */
-    .bscrim { display:block; position:fixed; left:0; right:0; bottom:0; height:calc(env(safe-area-inset-bottom) + 20px); z-index:5; background:var(--bg); pointer-events:none; }
-    .bscrim::before { content:""; position:absolute; left:0; right:0; bottom:100%; height:72px; background:linear-gradient(transparent, var(--bg)); }
-    .scrim::after { content:""; position:absolute; left:0; right:0; top:100%; height:48px; pointer-events:none; background:linear-gradient(var(--bg), transparent); }
+    .bscrim { display:block; position:fixed; left:0; right:0; bottom:0; height:env(safe-area-inset-bottom, 0px); z-index:5; background:var(--bg); pointer-events:none; }
+    .bscrim::before { content:""; position:absolute; left:0; right:0; bottom:100%; height:28px; background:linear-gradient(transparent, color-mix(in srgb, var(--bg) 18%, transparent) 25%, color-mix(in srgb, var(--bg) 55%, transparent) 60%, var(--bg)); }
+    .scrim::after { content:""; position:absolute; left:0; right:0; top:100%; height:28px; pointer-events:none; background:linear-gradient(var(--bg), color-mix(in srgb, var(--bg) 55%, transparent) 40%, color-mix(in srgb, var(--bg) 18%, transparent) 75%, transparent); }
     .card.shut { touch-action:none; }
     .card { position:fixed; left:0; right:0; bottom:0; z-index:10; max-height:min(82dvh, 680px);
             padding:0 24px calc(24px + env(safe-area-inset-bottom)); border-radius:28px 28px 0 0; box-shadow:0 -8px 32px -12px var(--lift); touch-action:pan-y; }
@@ -1094,7 +1094,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   const topH = () => phone() ? $('ask').getBoundingClientRect().bottom + 16 : 0;
   // space the shelf covers, measured from the bottom of the map (which runs past the screen, under Safari's bar)
   const botH = () => phone() ? $('map').getBoundingClientRect().bottom - $('card').getBoundingClientRect().top + 8 : 0;
-  function setTop() { document.documentElement.style.setProperty('--top', topH() + 40 + 'px'); map && map.invalidateSize(); }
+  function setTop() { document.documentElement.style.setProperty('--top', topH() - 6 + 'px'); map && map.invalidateSize(); }
   addEventListener('resize', setTop);
   function buildMap() {
     if (!window.L) { $('map').innerHTML = '<p class="where" style="padding:24px">The map couldn’t load.</p>'; return; }
