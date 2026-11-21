@@ -11,7 +11,7 @@ Live: https://hendoscott7.github.io/t-out/
   - **Mood:** any mood / run him ragged / keep it calm.
   - **Price:** any price / free / cheap.
   - **Distance:** any distance / under 15 min / under 30 min / under an hour.
-  - **Kind:** every kind, or one kind in its own colour (outdoors, animals, museums, groups, other). This is also the colour key for the map dots. No soft play: Theo doesn't like it.
+  - **Kind:** every kind, or one kind in its own colour (outdoors, animals, museums, groups, other). This is also the colour key for the map dots, and the coloured tag on each place. Soft play isn't a category; any soft play on your own list sits under other, with markets.
 - **The map** shows every place as a dot in its kind's colour. Places that don't fit the sentence fade out, and hollow dots are places you've been. Drag, pinch and tap as normal. The ⓘ shows the map credits.
 - **The shelf** at the bottom says "Where to?". Pull it up and it picks somewhere, favouring places you haven't been and avoiding recent picks. The map flies to the pick.
   - The open shelf shows the kind, inside/outside, cost and drive time, a note, recent photos taken near the place (Wikimedia Commons, 2018 on), and **Directions** to Google Maps.

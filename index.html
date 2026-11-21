@@ -876,12 +876,12 @@ svg.leaflet-image-layer.leaflet-interactive path {
   const LS = 't-out';
   const NS = 'http://www.w3.org/2000/svg';
 
-  const KINDS = { park:'Park & playground', woods:'Woods & trails', beach:'Beach', animals:'Animals', museum:'Museum', space:'Space', group:'Groups & classes', market:'Market', other:'Other' };
+  const KINDS = { park:'Park & playground', woods:'Woods & trails', beach:'Beach', animals:'Animals', museum:'Museum', space:'Space', group:'Groups & classes', market:'Market', play:'Soft play', other:'Other' };
   const WHERE = { in:'Inside', out:'Outside', both:'In & out' };
   const COST = ['Free', '£', '££'];
   const MINS = [10, 20, 30, 45, 60, 90];
   const ENERGY = { run:'Run it off', calm:'Calm', mix:'Bit of both' };
-  const SECTORS = [['Outdoors', ['park', 'woods', 'beach']], ['Animals', ['animals']], ['Play', []], ['Museums', ['museum', 'space']], ['Groups', ['group', 'market']], ['Other', ['other']]];
+  const SECTORS = [['Outdoors', ['park', 'woods', 'beach']], ['Animals', ['animals']], ['Play', []], ['Museums', ['museum', 'space']], ['Groups', ['group']], ['Other', ['other', 'market', 'play']]];
   const sectorOf = k => Math.max(0, SECTORS.findIndex(s => s[1].includes(k)));
   const ink = p => `var(--h${sectorOf(p.kind)})`, tint = p => `var(--t${sectorOf(p.kind)})`;
 
@@ -941,7 +941,6 @@ svg.leaflet-image-layer.leaflet-interactive path {
     state.seeded.push(id);
     state.places.push({ id, name, area, kind, where, cost, mins, energy, note, mine:false, been:[] });
   });
-  state.places = state.places.filter(p => p.kind !== 'play');   // no soft play: he doesn't like it
   if (state.f.sector === 2) state.f.sector = -1;
   const save = () => { try { localStorage.setItem(LS, JSON.stringify(state)); } catch (e) {} };
   save();
@@ -1122,7 +1121,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       c.innerHTML = HANDLE + `<div class="peek start"><span class="pn">${n ? 'Where to?' : 'Nothing fits'}</span>
         <button class="act round main" data-a="pick" aria-label="Pick somewhere" ${n ? '' : 'disabled'}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5.5 11.5L12 5l6.5 6.5"/></svg></button></div>`;
     } else {
-      c.innerHTML = HANDLE + peek + `<div class="meta"><span class="tag" style="--c:${ink(p)};--tint:${tint(p)}">${KINDS[p.kind]}</span><span class="facts">${WHERE[p.where]} · ${COST[p.cost]} · ${minsLabel(p.mins)}</span></div>
+      c.innerHTML = HANDLE + peek + `<div class="meta"><span class="tag" style="--c:${ink(p)};--tint:${tint(p)}">${SECTORS[sectorOf(p.kind)][0]}</span><span class="facts">${KINDS[p.kind] !== SECTORS[sectorOf(p.kind)][0] ? KINDS[p.kind] + ' · ' : ''}${WHERE[p.where]} · ${COST[p.cost]} · ${minsLabel(p.mins)}</span></div>
         <h2 data-a="edit" title="Edit">${esc(p.name)}</h2>
         <p class="where">${esc([p.area, p.been.length ? 'last went ' + ago(p.been[p.been.length - 1]) : 'never been'].filter(Boolean).join(' · '))}</p>
         <button class="ph" data-a="photos" aria-expanded="false" hidden><span class="phn"></span><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3.5L5 6.5 8 3.5"/></svg></button>
