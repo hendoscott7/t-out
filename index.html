@@ -789,7 +789,11 @@ svg.leaflet-image-layer.leaflet-interactive path {
   @keyframes rise { from { opacity:0; transform:translateY(8px); } }
   .handle, .peek, .scrim, .bscrim { display:none; }
   .card.idle { background:none !important; box-shadow:none !important; padding:0 !important; overflow:visible; align-items:flex-end; }
-  .act.fab { flex:none; width:60px !important; height:60px !important; box-shadow:0 8px 24px -8px rgba(0,0,0,.45), 0 0 0 1px var(--faint); }
+  .act.fab { flex:none; width:60px !important; height:60px !important; color:var(--ink) !important;
+             background:color-mix(in srgb, var(--bg) 42%, transparent) !important; -webkit-backdrop-filter:blur(18px) saturate(1.8); backdrop-filter:blur(18px) saturate(1.8);
+             border:1px solid color-mix(in srgb, var(--ink) 14%, transparent) !important;
+             box-shadow:inset 0 1px 0 color-mix(in srgb, #fff 45%, transparent), 0 10px 28px -10px rgba(0,0,0,.35); }
+  .act.fab:active, .act.fab.pressed { background:color-mix(in srgb, var(--bg) 70%, transparent) !important; }
   .act.fab svg { width:30px !important; height:30px !important; }
   .card .peek.start { display:flex !important; align-items:center; gap:16px; }
   .card .peek.start .pn { flex:1; font-size:20px; font-weight:400; letter-spacing:-.02em; color:var(--ink); }
@@ -1246,7 +1250,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     c.classList.remove('drag'); c.classList.add('snap'); c.style.transform = '';
     setTimeout(() => c.classList.remove('snap'), 340);
     if (cardDragged) {
-      if (!shut && (dy > 60 || v > .5)) setShelf(true);
+      if (!shut && (dy > 60 || v > .5)) { current = null; shut = phone(); renderMap(); renderCard(); }
       else if (shut && (dy < -24 || v < -.3)) { setShelf(false); if (!current) pick(); }
     } else if (shut) { setShelf(false); if (!current) pick(); }
     setTimeout(() => { cardDragged = false; }, 0);
