@@ -58,6 +58,7 @@
   /* the choices as one ruled row: three equal cells, hairlines top and bottom, small dividers between */
   .ask { display:grid !important; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:0 10px; height:auto !important; padding:0 16px; }
   .ask > span { position:relative; display:flex; border-top:1px solid var(--faint); }   /* each cell has its own line above */
+  .ask > span + span::before { content:""; position:absolute; left:-5.5px; top:30%; bottom:30%; width:1px; background:var(--faint); }   /* small dividers between */
   .ask button { flex:1; font-weight:500; padding:.62em .4em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition:background .15s; }
   .ask button:active { background:color-mix(in srgb, var(--ink) 7%, transparent); }
   .ask button::first-letter { text-transform:uppercase; }
