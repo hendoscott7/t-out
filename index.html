@@ -810,8 +810,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
     .map { position:fixed; inset:env(safe-area-inset-top) 0 0 0; height:auto; width:auto; margin:0; border-radius:0; }
     .mast, .ask { position:relative; z-index:2; }
     .map .leaflet-top { top:calc(var(--top, 200px) - 48px); }
-    .scrim { display:block; position:fixed; left:0; right:0; top:0; height:var(--top, 200px); z-index:1; pointer-events:none;
-             background:var(--bg); -webkit-mask-image:linear-gradient(#000 calc(100% - 56px), transparent); mask-image:linear-gradient(#000 calc(100% - 56px), transparent); }
+    .scrim { display:block; position:fixed; left:0; right:0; top:0; height:calc(var(--top, 200px) - 48px); z-index:1; background:var(--bg); }
+    .scrim::after { content:""; position:absolute; left:0; right:0; top:100%; height:48px; pointer-events:none; background:linear-gradient(var(--bg), transparent); }
     .card.shut { touch-action:none; }
     .card { position:fixed; left:0; right:0; bottom:0; z-index:10; max-height:min(82dvh, 680px);
             padding:0 24px calc(24px + env(safe-area-inset-bottom)); border-radius:28px 28px 0 0; box-shadow:0 -8px 32px -12px var(--lift); touch-action:pan-y; }
@@ -840,7 +840,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 <body>
   <div class="scrim" aria-hidden="true"></div>
   <header class="mast">
-    <h1 class="word">T-Out</h1>
+    <h1 class="word"><a href="./" id="home" aria-label="T-Out, start again" style="text-decoration:none">T-Out</a></h1>
     <div class="wx" id="wx" role="img" hidden></div>
   </header>
 
@@ -929,6 +929,19 @@ svg.leaflet-image-layer.leaflet-interactive path {
     ['tannaghmore', 'Tannaghmore Gardens', 'Craigavon', 'animals', 'out', 0, 35, 'mix', 'Gardens with a rare-breeds farm. Check animal times.'],
     ['delamont', 'Delamont Country Park', 'Killyleagh', 'park', 'out', 1, 40, 'run', 'Miniature railway in season, a big playground and the lough.'],
     ['carnfunnock', 'Carnfunnock Country Park', 'Larne', 'park', 'out', 1, 40, 'run', 'Maze, playground and woods by the coast road.'],
+    ['belvoir', 'Belvoir Forest', 'South Belfast', 'woods', 'out', 0, 10, 'mix', 'Flat forest paths and a motte to climb. Easy with a buggy.'],
+    ['ark', 'The Ark Open Farm', 'Newtownards', 'animals', 'both', 1, 25, 'mix', 'Small farm with lambs, goats and ponies, made for little ones.'],
+    ['oxfordisland', 'Oxford Island', 'Lough Neagh', 'woods', 'out', 0, 35, 'calm', 'Flat lakeside paths, bird hides and a playground. Free.'],
+    ['castleward', 'Castle Ward', 'Strangford', 'park', 'out', 2, 50, 'run', 'National Trust farmyard, big lawns and an adventure playground.'],
+    ['castlewellan', 'Castlewellan Forest Park', 'Castlewellan', 'park', 'out', 1, 50, 'run', 'Lake loop, a hedge maze to toddle round and a playground.'],
+    ['newcastle', 'Newcastle seafront', 'Newcastle', 'beach', 'out', 0, 50, 'run', 'Long flat promenade, sand and the Mournes behind. Chips after.'],
+    ['tollymore', 'Tollymore Forest Park', 'Newcastle', 'woods', 'out', 1, 55, 'mix', 'River paths and stepping stones to watch. Carrier for the hilly bits.'],
+    ['gosford', 'Gosford Forest Park', 'Markethill', 'woods', 'out', 1, 60, 'mix', 'Woods, walled garden and a big play park.'],
+    ['lesliehill', 'Leslie Hill Open Farm', 'Ballymoney', 'animals', 'out', 1, 65, 'mix', 'Old farm with animals and a little train. Summer season, check dates.'],
+    ['kilbroney', 'Kilbroney Park', 'Rostrevor', 'park', 'out', 0, 70, 'run', 'Great playground under the forest, by Carlingford Lough.'],
+    ['causeway', 'Giant’s Causeway', 'North Coast', 'beach', 'out', 2, 75, 'mix', 'Shuttle bus down to the stones, buggy-friendly path. Go early.'],
+    ['portrush', 'West Strand, Portrush', 'North Coast', 'beach', 'out', 0, 80, 'run', 'Wide sandy beach with the town right behind it.'],
+    ['portstewart', 'Portstewart Strand', 'North Coast', 'beach', 'out', 1, 85, 'run', 'National Trust beach you can drive onto. Huge, flat, sandy.'],
     ['armagh', 'Armagh Planetarium', 'Armagh', 'space', 'in', 1, 60, 'calm', 'Under-3s go free. Pick the pre-school dome show; some shows are for over-6s or over-8s. Book ahead.'],
   ];
 
@@ -936,7 +949,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   const blank = () => ({ v:3, places:[], last:[], f:blankF(), seeded:[] });
   let state;
   try { state = JSON.parse(localStorage.getItem(LS)) || blank(); } catch (e) { state = blank(); }
-  state = Object.assign(blank(), state); state.f = Object.assign(blankF(), state.f, { wx:'any', pool:'any' });   // weather comes fresh from the forecast
+  state = Object.assign(blank(), state); state.f = Object.assign(blankF(), state.f, { wx:'any', pool:'any', near:0 });   // weather comes fresh from the forecast
   IDEAS.forEach(([id, name, area, kind, where, cost, mins, energy, note]) => {
     if (state.seeded.includes(id)) return;
     state.seeded.push(id);
@@ -960,7 +973,6 @@ svg.leaflet-image-layer.leaflet-interactive path {
     wx:     [['any', 'Rain or shine'], ['dry', 'It’s dry'], ['rain', 'It’s raining']],
     energy: [['any', 'any mood'], ['run', 'run him ragged'], ['calm', 'keep it calm']],
     cost:   [['any', 'any price'], ['free', 'free'], ['cheap', 'cheap']],
-    near:   [[0, 'any distance'], [15, 'under 15 min'], [30, 'under 30 min'], [60, 'under an hour']],
     // the last phrase is the colour key: every kind, or one kind in its own colour
     sector: [[-1, 'every kind'], [0, 'outdoors'], [1, 'animals'], [3, 'museums'], [4, 'groups'], [5, 'other']],
   };
@@ -972,7 +984,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     };
     const b = (k, cap) => { const o = ASK[k].find(x => x[0] === state.f[k]) || ASK[k][0], t = cap ? o[1][0].toUpperCase() + o[1].slice(1) : o[1];
       return `<button data-k="${k}" class="${o[0] !== ASK[k][0][0] ? 'set' : 'any'}" aria-label="${k}: ${o[1]}. Tap to change">${t}</button>`; };
-    $('ask').innerHTML = `<span>${b('wx')},</span> <span>${b('energy')},</span> <span>${b('cost')},</span> <span>${b('near')},</span> <span>${kind()}.</span>`;
+    $('ask').innerHTML = `<span>${b('wx')},</span> <span>${b('energy')},</span> <span>${b('cost')},</span> <span>${kind()}.</span>`;
   }
   $('ask').addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
@@ -1006,7 +1018,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
     hazelbank:[54.6640,-5.9070], windowwildlife:[54.6295,-5.8935], seapark:[54.6440,-5.8400], funkykennedy:[54.5800,-5.9830], wallace:[54.5155,-6.0530],
     traintobangor:[54.5950,-5.9170], pickie:[54.6655,-5.6700], carrick:[54.7130,-5.8060], hillsborough:[54.4625,-6.0870], scrabo:[54.5870,-5.7230],
     castleespie:[54.5240,-5.6990], antrimgardens:[54.7175,-6.2230], whitehead:[54.7550,-5.7080], mountstewart:[54.5530,-5.6020],
-    tannaghmore:[54.4440,-6.3830], delamont:[54.4140,-5.6650], carnfunnock:[54.8860,-5.8320],
+    tannaghmore:[54.4440,-6.3830],
+    belvoir:[54.5600,-5.9330], ark:[54.6180,-5.6970], oxfordisland:[54.4960,-6.3890], castleward:[54.3720,-5.5850], castlewellan:[54.2650,-5.9480],
+    newcastle:[54.2150,-5.8890], tollymore:[54.2240,-5.9300], gosford:[54.3000,-6.5270], lesliehill:[55.0640,-6.5300], kilbroney:[54.1030,-6.2010],
+    causeway:[55.2378,-6.5137], portrush:[55.2040,-6.6550], portstewart:[55.1700,-6.7200], delamont:[54.4140,-5.6650], carnfunnock:[54.8860,-5.8320],
   };
   state.places.forEach(p => { if (!p.at && AT[p.id]) p.at = AT[p.id]; if (p.id === 'roar' && p.area === 'Belfast') p.area = 'Dunmurry'; });
   save();
@@ -1124,7 +1139,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     } else {
       c.innerHTML = HANDLE + peek + `<div class="meta"><span class="tag" style="--c:${ink(p)};--tint:${tint(p)}">${SECTORS[sectorOf(p.kind)][0]}</span><span class="facts">${KINDS[p.kind] !== SECTORS[sectorOf(p.kind)][0] ? KINDS[p.kind] + ' · ' : ''}${WHERE[p.where]} · ${COST[p.cost]} · ${minsLabel(p.mins)}</span></div>
         <h2 data-a="edit" title="Edit">${esc(p.name)}</h2>
-        <p class="where">${esc([p.area, p.been.length ? 'last went ' + ago(p.been[p.been.length - 1]) : 'never been'].filter(Boolean).join(' · '))}</p>
+        <p class="where">${esc([p.area, p.been.length ? 'last went ' + ago(p.been[p.been.length - 1]) : ''].filter(Boolean).join(' · '))}</p>
         <button class="ph" data-a="photos" aria-expanded="false" hidden><span class="phn"></span><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3.5L5 6.5 8 3.5"/></svg></button>
         <div class="photos" hidden></div><p class="credit" hidden></p>
         ${p.note ? `<p class="note">${esc(p.note)}</p>` : ''}
@@ -1248,6 +1263,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
     renderAsk(); renderMap(); renderCard();
   }
   buildMap(); refresh();
+  // tapping the name starts afresh: filters cleared, nothing picked, map back to its first view
+  $('home').addEventListener('click', e => { e.preventDefault(); state.f = blankF(); save(); location.reload(); });
 
 
   // ---------- today's weather: one symbol, from Open-Meteo (no key needed) ----------
