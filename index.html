@@ -799,12 +799,14 @@ svg.leaflet-image-layer.leaflet-interactive path {
     .stage { grid-template-columns:minmax(0, 1fr); margin-top:20px; align-items:stretch; }
     .well { gap:16px; }
     /* the map fills the whole screen, under Safari's bars too; everything else floats on it */
-    html, body { overflow:visible; overscroll-behavior:none; }
+    html, body { overflow:visible; overscroll-behavior:none; scrollbar-width:none; }
+    html::-webkit-scrollbar, body::-webkit-scrollbar { display:none; }
     .map { position:absolute; left:0; right:0; top:0; height:calc(100lvh + 160px); width:auto; margin:0; border-radius:0; }
     .mast, .ask { position:relative; z-index:2; }
     .map .leaflet-top { top:calc(var(--top, 200px) - 48px); }
     .scrim { display:block; position:fixed; left:0; right:0; top:0; height:var(--top, 200px); z-index:1; pointer-events:none;
              background:linear-gradient(to bottom, var(--bg) 0, var(--bg) calc(100% - 56px), color-mix(in srgb, var(--bg) 0%, transparent)); }
+    .card.shut { touch-action:none; }
     .card { position:fixed; left:8px; right:8px; bottom:calc(8px + env(safe-area-inset-bottom)); z-index:10; max-height:min(80dvh, 660px);
             padding:0 20px 20px; border-radius:32px; box-shadow:0 -8px 40px -16px var(--lift), 0 0 0 1px var(--faint); touch-action:pan-y; }
     .card.drag { transition:none !important; }
@@ -1229,7 +1231,12 @@ svg.leaflet-image-layer.leaflet-interactive path {
   }
   buildMap(); refresh();
   // the map runs under Safari's bar, so the page is a touch taller than the screen: stop it scrolling
-  document.addEventListener('touchmove', e => { if (!e.target.closest('.card, .map, .modal')) e.preventDefault(); }, { passive:false });
+  document.addEventListener('touchmove', e => {
+    if (e.target.closest('.map, .modal')) return;                       // the map and edit sheet handle their own touches
+    const c = e.target.closest('.card');
+    const scrollsInside = c && !shut && y0 === null && c.scrollHeight > c.clientHeight + 1;   // an open, long shelf may scroll itself
+    if (!scrollsInside) e.preventDefault();                               // everything else: never move the page
+  }, { passive:false });
   addEventListener('scroll', () => { if (scrollY) scrollTo(0, 0); });
 
   // ---------- today's weather: one symbol, from Open-Meteo (no key needed) ----------
