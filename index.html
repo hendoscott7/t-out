@@ -772,7 +772,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   .acts { margin-top:auto; padding-top:40px; display:flex; gap:8px; }
   .act { height:50px; border-radius:25px; border:1.5px solid var(--ink); display:flex; align-items:center; justify-content:center; gap:8px; font-size:15px; font-weight:500; text-decoration:none; flex:1; }
   .act.round { width:36px; height:36px; flex:none; padding:0; border-radius:50%; border-width:1.25px; }
-  .act.round svg { width:24px; height:24px; }
+  .act.round svg { width:22px; height:22px; }
   .act.round { width:44px; height:44px; }
   /* press feedback: outline buttons go solid, and the arrow gives a turn */
   .act.round:active, .act.round.pressed { background:var(--ink); color:var(--paper); border-color:var(--ink); }
@@ -1156,7 +1156,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   // ---------- the shelf ----------
   let current = null, shut = phone(), pressedUntil = 0;
-  const REFRESH = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21.6 12a9.6 9.6 0 1 1-2.81-6.79"/><path d="M19.4 1.9v3.7h-3.7"/><path d="M12 19.2s-4.9-4.3-4.9-8.3a4.9 4.9 0 0 1 9.8 0c0 4-4.9 8.3-4.9 8.3z" stroke-width="2"/><circle cx="12" cy="10.9" r="1.7" fill="currentColor" stroke="none"/></svg>';   // a new place: refresh arrow round a big map pin   // a new place: refresh arrow round a map pin   // shuffle: pick another
+  const REFRESH = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/><path d="M17.6 3.4v3.5h-3.5"/><circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none"/></svg>';   // a new place: refresh arrow round a location dot   // a new place: refresh arrow round a big map pin   // a new place: refresh arrow round a map pin   // shuffle: pick another
   const HANDLE = '<div class="handle" aria-hidden="true"></div>';
   function renderCard(animate) {
     const c = $('card'), p = current, n = state.places.filter(fits).length;
