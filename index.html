@@ -54,7 +54,7 @@
   .home { fill:var(--ink); }
   .pin { font-size:5.6px; font-weight:700; letter-spacing:-.01em; paint-order:stroke; stroke:var(--sky); stroke-width:2.4px; stroke-linejoin:round; pointer-events:none; }
   .dot { cursor:pointer; transition:opacity .25s, transform .3s var(--ease); transform-box:fill-box; transform-origin:center; }
-  .dot circle { fill:var(--ink); stroke:var(--ink); stroke-width:.9; }
+  .dot circle { fill:var(--c, var(--ink)); stroke:var(--c, var(--ink)); stroke-width:.9; }
   .dot.been circle { fill:var(--sky); }
   .dot.out { opacity:.18; }
   .dot.mine circle.m { fill:none; stroke-width:.6; }
@@ -71,12 +71,17 @@
   .card { background:var(--paper); border-radius:28px; padding:22px 22px 18px; min-height:280px; display:flex; flex-direction:column;
           box-shadow:0 18px 40px -22px rgba(0,0,0,.45); }
   .card .meta { display:flex; flex-wrap:wrap; gap:6px; }
-  .tag { font-size:12px; font-weight:500; padding:4px 9px; border:1px solid var(--ink); border-radius:12px; }
-  .tag.fill { background:var(--ink); color:var(--paper); }
+  .card .meta { align-items:center; gap:10px; }
+  .tag { font-size:11px; font-weight:700; letter-spacing:.01em; padding:3px 8px 3px 7px; border-radius:6px; background:var(--tint, #e4e4e0); color:var(--c, var(--ink)); display:inline-flex; align-items:center; gap:5px; }
+  .tag::before { content:""; width:6px; height:6px; border-radius:50%; background:currentColor; }
+  .tag.plain { background:none; color:var(--soft); font-weight:500; padding:0; }
+  .tag.plain::before { display:none; }
+  .facts { font-size:12px; color:var(--soft); font-weight:500; }
   .card h2 { margin-top:22px; font-size:clamp(34px, 4.6vw, 56px); font-weight:700; line-height:.95; letter-spacing:-.045em; cursor:pointer; }
   .card .where { margin-top:10px; color:var(--soft); }
   .card .note { margin-top:16px; line-height:1.4; max-width:34ch; }
-  .card .acts { margin-top:auto; padding-top:24px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; }
+  .card .acts { margin-top:auto; padding-top:24px; display:grid; grid-template-columns:auto minmax(0, 1fr); gap:8px; }
+  .act.round { width:50px; padding:0; border-radius:50%; flex:none; }
   .act { height:50px; border-radius:25px; border:1.5px solid var(--ink); display:flex; align-items:center; justify-content:center; gap:7px;
          font-size:14px; font-weight:500; text-decoration:none; }
   .act.main { background:var(--ink); color:var(--paper); }
@@ -86,6 +91,12 @@
   .card.landed > * { animation:rise .4s var(--ease) both; }
   .card.landed > :nth-child(2) { animation-delay:.04s; } .card.landed > :nth-child(3) { animation-delay:.08s; } .card.landed > :nth-child(4) { animation-delay:.12s; }
   @keyframes rise { from { opacity:0; transform:translateY(8px); } }
+
+  /* pull-up shelf (phones) */
+  .handle, .peek { display:none; }
+  .card { touch-action:pan-x; }
+  .card.drag { transition:none !important; }
+  .card.snap { transition:transform .32s var(--ease); }
 
   /* sheets */
   .modal { position:fixed; inset:0; z-index:20; background:rgba(17,17,17,.28); display:flex; align-items:flex-end; justify-content:center; animation:fade .18s; }
@@ -137,8 +148,16 @@
     .card .where { margin-top:6px; font-size:14px; }
     .card .note { margin-top:8px; font-size:14px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
     .card .acts { padding-top:14px; }
-    .act { height:46px; }
-    .tag { font-size:11px; padding:3px 8px; }
+    .act { height:48px; } .act.round { width:48px; }
+  }
+  @media (max-width:820px) {
+    .handle { display:block; width:100%; height:22px; margin:-10px 0 4px; position:relative; cursor:grab; }
+    .handle::before { content:""; position:absolute; left:50%; top:9px; width:42px; height:5px; margin-left:-21px; border-radius:3px; background:var(--faint); }
+    .card.shut { padding-bottom:12px; }
+    .card.shut > :not(.handle):not(.peek) { display:none; }
+    .card.shut .peek { display:flex; align-items:center; gap:12px; }
+    .peek .pn { flex:1; min-width:0; font-size:20px; font-weight:700; letter-spacing:-.03em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .peek .act.round { width:42px; height:42px; }
   }
   @media (max-height:640px) { .hint { display:none; } .card .note { display:none; } }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation:none !important; transition:none !important; } }
@@ -196,6 +215,15 @@
     ['Museums', ['museum', 'space']],
     ['Groups', ['group', 'market']],
     ['Other', ['other']],
+  ];
+  // one colour per slice: dark enough to read on the sky, with a pale tint for tags
+  const HUE = [
+    { ink:'#1d6b3c', tint:'#d5ecd9' },   // Outdoors
+    { ink:'#b2441b', tint:'#f8dccd' },   // Animals
+    { ink:'#b62a6a', tint:'#f6d5e4' },   // Play
+    { ink:'#4836a0', tint:'#e0dbf5' },   // Museums
+    { ink:'#7d5f00', tint:'#f4e7b8' },   // Groups
+    { ink:'#333333', tint:'#e4e4e0' },   // Other
   ];
   const sectorOf = k => Math.max(0, SECTORS.findIndex(s => s[1].includes(k)));
 
@@ -305,7 +333,7 @@
     SECTORS.forEach(([name], i) => {
       const a = -Math.PI / 2 + i * w;
       el('line', { x1:0, y1:0, x2:RMAX * Math.cos(a), y2:RMAX * Math.sin(a), class:'spoke' }, svg);
-      const m = a + w / 2, t = el('text', { x:(RMAX + 10) * Math.cos(m), y:(RMAX + 10) * Math.sin(m) + 2, 'text-anchor':'middle', class:'sl', 'data-s':i, tabindex:0, role:'button' }, svg);
+      const m = a + w / 2, t = el('text', { x:(RMAX + 10) * Math.cos(m), y:(RMAX + 10) * Math.sin(m) + 2, 'text-anchor':'middle', class:'sl', 'data-s':i, tabindex:0, role:'button', fill:HUE[i].ink }, svg);
       t.textContent = name;
     });
     sweep = el('g', { class:'sweep' }, svg);
@@ -326,7 +354,7 @@
     // draw non-fitting first so fitting dots sit on top
     [...state.places].sort((a, b) => fits(a) - fits(b)).forEach(p => {
       const [x, y] = pos(p), ok = fits(p);
-      const at = el('g', { transform:`translate(${x.toFixed(2)} ${y.toFixed(2)})` }, dotsG);
+      const at = el('g', { transform:`translate(${x.toFixed(2)} ${y.toFixed(2)})`, style:`--c:${HUE[sectorOf(p.kind)].ink}` }, dotsG);
       const g = el('g', { class:`dot${ok ? '' : ' out'}${p.been.length ? ' been' : ''}${p.mine ? ' mine' : ''}${current === p ? ' sel' : ''}`, 'data-id':p.id,
         tabindex:ok ? 0 : -1, role:'button', 'aria-label':`${p.name}, ${minsLabel(p.mins)}` }, at);
       el('circle', { r:2.4 }, g);
@@ -343,39 +371,71 @@
 
   // ---------- card ----------
   let current = null;
+  const REFRESH = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.7L20 8.5M20 4v4.5h-4.5"/></svg>';
+  const dirUrl = p => `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(p.name + ' ' + (p.area || '') + ' Northern Ireland')}`;
+  const HANDLE = '<button class="handle" data-a="shelf" aria-label="Show or hide details"></button>';
+  const peek = (name, btn, off) => `<div class="peek"><span class="pn">${esc(name)}</span><button class="act round" data-a="pick" aria-label="${btn}" ${off ? 'disabled' : ''}>${REFRESH}</button></div>`;
+  let shut = false;
+  const phone = () => matchMedia('(max-width:820px)').matches;
+  function setShelf(close) { shut = close && phone(); $('card').classList.toggle('shut', shut); $('card').setAttribute('aria-expanded', String(!shut)); }
   function renderCard(animate) {
     const c = $('card'), p = current;
     c.classList.toggle('idle', !p); c.classList.remove('landed');
     if (!p) {
       const n = state.places.filter(fits).length;
-      c.innerHTML = `<div class="meta"><span class="tag">${n ? n + ' to choose from' : 'Nothing fits'}</span></div>
+      c.innerHTML = HANDLE + peek(n ? 'Where to, Theo?' : 'Nothing fits', 'Pick', !n) + `<div class="meta"><span class="tag plain">${n ? n + ' to choose from' : 'Nothing fits'}</span></div>
         <h2>${n ? 'Where to, Theo?' : 'Try fewer underlines.'}</h2>
         <p class="note">Further out means a longer drive. Filled dots: not been yet.</p>
         <div class="acts" style="grid-template-columns:1fr"><button class="act main" data-a="pick" ${n ? '' : 'disabled'}>Pick for me</button></div>`;
       return;
     }
     const went = p.been.includes(today());
-    c.innerHTML = `<div class="meta"><span class="tag fill">${KINDS[p.kind]}</span><span class="tag">${WHERE[p.where]}</span><span class="tag">${COST[p.cost]}</span><span class="tag">${minsLabel(p.mins)}</span></div>
+    c.innerHTML = HANDLE + peek(p.name, 'Another') + `<div class="meta"><span class="tag" style="--c:${HUE[sectorOf(p.kind)].ink};--tint:${HUE[sectorOf(p.kind)].tint}">${KINDS[p.kind]}</span><span class="facts">${WHERE[p.where]} · ${COST[p.cost]} · ${minsLabel(p.mins)}</span></div>
       <h2 data-a="edit" title="Edit">${esc(p.name)}</h2>
       <p class="where">${esc([p.area, p.been.length ? 'last went ' + ago(p.been[p.been.length - 1]) : 'never been'].filter(Boolean).join(' · '))}</p>
       ${p.note ? `<p class="note">${esc(p.note)}</p>` : ''}
       <div class="acts">
-        <button class="act" data-a="pick" aria-label="Pick another"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.7L20 8.5M20 4v4.5h-4.5"/></svg>Another</button>
-        <a class="act" href="${esc(mapUrl(p))}" target="_blank" rel="noopener">Maps</a>
-        <button class="act main ${went ? 'on' : ''}" data-a="been" style="${went ? 'color:var(--ink)' : ''}">${went ? '✓ Went' : 'We went'}</button>
+        <button class="act round" data-a="pick" aria-label="Pick another" title="Another">${REFRESH}</button>
+        <a class="act main" href="${esc(dirUrl(p))}" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 11.2L20 4l-7.2 16.5-2.1-7.2z"/></svg>Directions</a>
       </div>`;
+    c.classList.toggle('shut', shut);
     if (animate) { void c.offsetWidth; c.classList.add('landed'); }
   }
   $('card').addEventListener('click', e => {
     const a = e.target.closest('[data-a]'); if (!a) return;
+    if (a.dataset.a === 'shelf') return;
     if (a.dataset.a === 'pick') pick();
     if (a.dataset.a === 'been') { toggleBeen(current); renderCard(); renderRings(); }
     if (a.dataset.a === 'edit') openEdit(current);
   });
   function select(p, animate) {
-    current = p; renderRings(); renderCard(animate);
+    current = p; if (p && animate) shut = false; renderRings(); renderCard(animate);
     if (p && animate) { const [x, y] = pos(p); halo.setAttribute('cx', x); halo.setAttribute('cy', y); halo.classList.remove('on'); void halo.getBBox(); halo.classList.add('on'); }
   }
+
+  // drag the shelf: down to tuck it away, up to bring it back
+  let y0 = null, dy = 0, moved = false, onHandle = false;
+  $('card').addEventListener('pointerdown', e => {
+    if (!phone() || e.button > 0 || (e.target.closest('a, button') && !e.target.closest('.handle'))) return;
+    y0 = e.clientY; dy = 0; moved = false; onHandle = !!e.target.closest('.handle'); $('card').classList.add('drag'); $('card').setPointerCapture(e.pointerId);
+  });
+  $('card').addEventListener('pointermove', e => {
+    if (y0 === null) return;
+    dy = e.clientY - y0; if (Math.abs(dy) > 6) moved = true;
+    const t = shut ? Math.min(0, dy) * .35 : Math.max(0, dy);   // shut shelf only stretches a little when pulled up
+    $('card').style.transform = `translateY(${t}px)`;
+  });
+  const endDrag = () => {
+    if (y0 === null) return;
+    const c = $('card'); y0 = null; c.classList.remove('drag'); c.classList.add('snap'); c.style.transform = '';
+    setTimeout(() => c.classList.remove('snap'), 340);
+    if (moved) { if (!shut && dy > 50) setShelf(true); else if (shut && dy < -24) setShelf(false); }
+    else if (onHandle || shut) setShelf(!shut);   // a tap on the handle, or anywhere on a tucked shelf
+    setTimeout(() => { moved = false; }, 0);
+  };
+  $('card').addEventListener('pointerup', endDrag);
+  $('card').addEventListener('pointercancel', endDrag);
+  addEventListener('resize', () => { if (!phone() && shut) setShelf(false); });
 
   // ---------- pick ----------
   function weight(p) {
@@ -558,8 +618,22 @@
       const w = { day:today(), at:Date.now(), code:d.weather_code[0], max:d.temperature_2m_max[0], pop:d.precipitation_probability_max[0] };
       try { localStorage.setItem(LS + '-wx', JSON.stringify(w)); } catch (e) {}
       showWx(w);
-    } catch (e) { /* offline: no symbol, nothing else changes */ }
+    } catch (e) { manualWx(); }
   })();
+  // no forecast (offline, or a host that blocks it): the symbol shows the weather you've told it, tap to change
+  function manualWx() {
+    wxToday = null;
+    const draw = () => {
+      const k = state.f.wx === 'rain' ? 'rain' : state.f.wx === 'dry' ? 'sun' : 'part';
+      $('wx').innerHTML = `<svg viewBox="0 0 48 48" aria-hidden="true">${WX_ICONS[k]}</svg>`;
+      $('wx').setAttribute('aria-label', 'No forecast. Tap to say what the weather is.');
+      $('wx').title = 'No forecast here. Tap to set the weather yourself.';
+      $('wx').hidden = false;
+    };
+    $('wx').onclick = () => { state.f.wx = state.f.wx === 'any' ? 'dry' : state.f.wx === 'dry' ? 'rain' : 'any'; save(); refresh(); draw(); };
+    $('ask').addEventListener('click', draw);
+    draw();
+  }
 })();
 </script>
 </body>
