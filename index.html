@@ -56,9 +56,8 @@
   .ask { flex:none; width:100%; font-size:24px; line-height:1.12; height:1.12em; white-space:nowrap; letter-spacing:-.025em; font-weight:500; }
   /* each choice is a quiet chip with a tiny chevron, so it reads as something you can change */
   /* the choices as one ruled row: three equal cells, hairlines top and bottom, small dividers between */
-  .ask { display:grid !important; grid-template-columns:repeat(3, minmax(0, 1fr)); height:auto !important; border-top:1px solid var(--faint); border-bottom:1px solid var(--faint); }
-  .ask > span { position:relative; display:flex; }
-  .ask > span + span::before { content:""; position:absolute; left:0; top:28%; bottom:28%; width:1px; background:var(--faint); }
+  .ask { display:grid !important; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:0 10px; height:auto !important; padding:0 16px; }
+  .ask > span { position:relative; display:flex; border-top:1px solid var(--faint); border-bottom:1px solid var(--faint); }   /* each cell has its own lines */
   .ask button { flex:1; font-weight:500; padding:.62em .4em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition:background .15s; }
   .ask button:active { background:color-mix(in srgb, var(--ink) 7%, transparent); }
   .ask button::first-letter { text-transform:uppercase; }
@@ -840,7 +839,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     .logo { width:46px; height:46px; margin:0 0 0 -4px; }
     .ask { text-align:center; }
     .wx svg { width:38px; height:38px; } .wx .deg { font-size:22px; } .wx { height:38px; }
-    .ask { font-size:min(19px, 4.6vw); letter-spacing:-.02em; margin:0 -16px; width:calc(100% + 32px); }
+    .ask { font-size:min(16px, 4vw); letter-spacing:-.01em; margin:0 -16px; width:calc(100% + 32px); }
     /* the shelf floats over the page, so the radar never changes size */
     .stage { grid-template-columns:minmax(0, 1fr); margin-top:20px; align-items:stretch; }
     .well { gap:16px; }
