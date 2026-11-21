@@ -772,7 +772,13 @@ svg.leaflet-image-layer.leaflet-interactive path {
   .acts { margin-top:auto; padding-top:40px; display:flex; gap:8px; }
   .act { height:50px; border-radius:25px; border:1.5px solid var(--ink); display:flex; align-items:center; justify-content:center; gap:8px; font-size:15px; font-weight:500; text-decoration:none; flex:1; }
   .act.round { width:36px; height:36px; flex:none; padding:0; border-radius:50%; border-width:1.25px; }
-  .act.round svg { width:20px; height:20px; }
+  .act.round svg { width:24px; height:24px; }
+  .act.round { width:44px; height:44px; }
+  /* press feedback: outline buttons go solid, and the arrow gives a turn */
+  .act.round:active, .act.round.pressed { background:var(--ink); color:var(--paper); border-color:var(--ink); }
+  .act.round.main:active, .act.round.main.pressed { transform:scale(.92); }
+  .act.round.pressed svg { animation:turn .55s var(--ease); }
+  @keyframes turn { from { transform:rotate(-200deg); } }
   .card { position:relative; }
   .act.corner { position:absolute; top:20px; right:20px; }
   .card:not(.idle) .meta { padding-right:48px; min-height:28px; }
@@ -814,6 +820,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
   .logo.busy { animation:bob 1.1s ease-in-out infinite; }
   @keyframes bob { 50% { transform:translateY(-7%) rotate(3deg); } }
   .word { font-size:60px; }
+    .mast { align-items:center; }
+    .logo { width:46px; height:46px; margin:0 0 0 -4px; }
+    .ask { text-align:center; }
     .wx svg { width:38px; height:38px; } .wx .deg { font-size:22px; } .wx { height:38px; }
     .ask { font-size:min(24px, 4.85vw); letter-spacing:-.03em; }
     /* the shelf floats over the page, so the radar never changes size */
@@ -987,7 +996,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   const ASK = {
     wx:     [['any', 'Rain or shine'], ['dry', 'It’s dry'], ['rain', 'It’s raining']],
     energy: [['any', 'any mood'], ['run', 'run him ragged'], ['calm', 'keep it calm']],
-    cost:   [['any', 'any price'], ['free', 'free'], ['cheap', 'cheap']],
+    cost:   [['any', 'any price'], ['free', 'free'], ['cheap', 'cheap'], ['treat', 'a treat']],
     // the last phrase is the colour key: every kind, or one kind in its own colour
     sector: [[-1, 'every kind'], [0, 'outdoors'], [1, 'animals'], [3, 'museums'], [4, 'groups'], [5, 'other']],
   };
@@ -1012,6 +1021,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     if (f.wx === 'dry' && p.where === 'in') return false;
     if (f.cost === 'free' && p.cost > 0) return false;
     if (f.cost === 'cheap' && p.cost > 1) return false;
+    if (f.cost === 'treat' && p.cost < 2) return false;   // the bigger days out: zoo, W5, Castle Ward…
     if (+f.near && p.mins > +f.near) return false;
     if (f.energy !== 'any' && p.energy !== f.energy && p.energy !== 'mix') return false;
     if (f.pool === 'new' && p.been.length) return false;
@@ -1145,8 +1155,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
   }
 
   // ---------- the shelf ----------
-  let current = null, shut = phone();
-  const REFRESH = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 12a8.5 8.5 0 1 1-2.49-6.01"/><path d="M18.3 2.6v3.6h-3.6"/><path d="M12 16.6s-3.6-3.3-3.6-6a3.6 3.6 0 0 1 7.2 0c0 2.7-3.6 6-3.6 6z" stroke-width="1.8"/><circle cx="12" cy="10.6" r="1.1" fill="currentColor" stroke="none"/></svg>';   // a new place: refresh arrow round a map pin   // shuffle: pick another
+  let current = null, shut = phone(), pressedUntil = 0;
+  const REFRESH = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21.6 12a9.6 9.6 0 1 1-2.81-6.79"/><path d="M19.4 1.9v3.7h-3.7"/><path d="M12 19.2s-4.9-4.3-4.9-8.3a4.9 4.9 0 0 1 9.8 0c0 4-4.9 8.3-4.9 8.3z" stroke-width="2"/><circle cx="12" cy="10.9" r="1.7" fill="currentColor" stroke="none"/></svg>';   // a new place: refresh arrow round a big map pin   // a new place: refresh arrow round a map pin   // shuffle: pick another
   const HANDLE = '<div class="handle" aria-hidden="true"></div>';
   function renderCard(animate) {
     const c = $('card'), p = current, n = state.places.filter(fits).length;
@@ -1169,6 +1179,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         </div>`;
       loadPhotos(p);
     }
+    if (Date.now() < pressedUntil) c.querySelectorAll('[data-a=pick]').forEach(b => b.classList.add('pressed'));
     c.classList.toggle('shut', shut);
     if (animate) { void c.offsetWidth; c.classList.add('landed'); }
   }
@@ -1181,7 +1192,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     const a = e.target.closest('[data-a]');
     if (!a) return;
     if (a.dataset.a === 'open') { setShelf(false); if (current) requestAnimationFrame(() => centreOn(current, true)); return; }
-    if (a.dataset.a === 'pick') { if (shut) setShelf(false); pick(); }
+    if (a.dataset.a === 'pick') { pressedUntil = Date.now() + 500; setTimeout(() => document.querySelectorAll('.pressed').forEach(b => b.classList.remove('pressed')), 560); if (shut) setShelf(false); pick(); }
     if (a.dataset.a === 'photos') { state.photosOpen = !state.photosOpen; save(); showPhotos(state.photosOpen); }
   });
   // flick the shelf: up opens it (and picks somewhere if nothing's chosen yet), down tucks it away
