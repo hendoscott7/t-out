@@ -53,11 +53,15 @@
   .wx .deg { font-size:30px; font-weight:500; letter-spacing:-.04em; }
 
   /* the sentence: fixed size and a fixed three-line box, so changing a word never moves anything */
-  .ask { flex:none; width:100%; font-size:34px; line-height:1.12; height:1.12em; white-space:nowrap; letter-spacing:-.025em; font-weight:500; }
+  .ask { flex:none; width:100%; font-size:24px; line-height:1.12; height:1.12em; white-space:nowrap; letter-spacing:-.025em; font-weight:500; }
   /* each choice is a quiet chip with a tiny chevron, so it reads as something you can change */
-  .ask button { position:relative; font-weight:500; padding:.04em .22em .06em .26em; margin:0; border-radius:.42em; background:color-mix(in srgb, var(--ink) 6%, transparent); transition:background .15s, transform .1s; }
-  .ask button::before { content:""; position:absolute; inset:-12px -3px; }   /* bigger tap area, same look */
-  .ask button:active { background:color-mix(in srgb, var(--ink) 14%, transparent); transform:scale(.97); }
+  /* the choices as one ruled row: three equal cells, hairlines top and bottom, small dividers between */
+  .ask { display:grid !important; grid-template-columns:repeat(3, minmax(0, 1fr)); height:auto !important; border-top:1px solid var(--faint); border-bottom:1px solid var(--faint); }
+  .ask > span { position:relative; display:flex; }
+  .ask > span + span::before { content:""; position:absolute; left:0; top:28%; bottom:28%; width:1px; background:var(--faint); }
+  .ask button { flex:1; font-weight:500; padding:.62em .4em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition:background .15s; }
+  .ask button:active { background:color-mix(in srgb, var(--ink) 7%, transparent); }
+  .ask button::first-letter { text-transform:uppercase; }
   .ask .any { color:var(--soft); }
   .ask .dots { display:inline-flex; gap:0; margin-left:4px; vertical-align:middle; position:relative; top:-.06em; }
   .ask .dots i { width:.34em; height:.34em; border-radius:50%; display:block; box-shadow:0 0 0 .06em var(--bg); }
@@ -836,7 +840,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     .logo { width:46px; height:46px; margin:0 0 0 -4px; }
     .ask { text-align:center; }
     .wx svg { width:38px; height:38px; } .wx .deg { font-size:22px; } .wx { height:38px; }
-    .ask { font-size:min(22px, 4.5vw); letter-spacing:-.03em; word-spacing:-.05em; margin:0 -10px; width:calc(100% + 20px); }
+    .ask { font-size:min(19px, 4.6vw); letter-spacing:-.02em; margin:0 -16px; width:calc(100% + 32px); }
     /* the shelf floats over the page, so the radar never changes size */
     .stage { grid-template-columns:minmax(0, 1fr); margin-top:20px; align-items:stretch; }
     .well { gap:16px; }
@@ -844,8 +848,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
     /* starts just below the status bar: Safari tints its top bar from whatever touches the top edge, and that should be the page's black, not the map's grey */
     .map { position:fixed; inset:env(safe-area-inset-top) 0 0 0; height:auto; width:auto; margin:0; border-radius:0; }
     .mast, .ask { position:relative; z-index:2; }
-    .map .leaflet-top { top:calc(var(--top, 200px) + 4px); }
-    .scrim { display:block; position:fixed; left:0; right:0; top:0; height:var(--top, 200px); z-index:1; background:var(--bg); border-bottom:1px solid var(--faint); }
+    .map .leaflet-top { top:calc(var(--top, 200px) + 8px); }
+    .scrim { display:block; position:fixed; left:0; right:0; top:0; height:var(--top, 200px); z-index:1; background:var(--bg); }
     /* same fade at the bottom: a solid strip on the edge (Safari's bar takes its colour) melting up into the map */
     .bscrim { display:block; position:fixed; left:0; right:0; bottom:0; height:env(safe-area-inset-bottom, 0px); z-index:5; background:var(--bg); pointer-events:none; }
     .bscrim::before { content:""; position:absolute; left:0; right:0; bottom:100%; height:28px; background:linear-gradient(transparent, color-mix(in srgb, var(--bg) 18%, transparent) 25%, color-mix(in srgb, var(--bg) 55%, transparent) 60%, var(--bg)); }
@@ -1102,7 +1106,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   const topH = () => phone() ? $('ask').getBoundingClientRect().bottom + 16 : 0;
   // space the shelf covers, measured from the bottom of the map (which runs past the screen, under Safari's bar)
   const botH = () => phone() ? $('map').getBoundingClientRect().bottom - $('card').getBoundingClientRect().top + 8 : 0;
-  function setTop() { document.documentElement.style.setProperty('--top', topH() - 6 + 'px'); map && map.invalidateSize(); }
+  function setTop() { document.documentElement.style.setProperty('--top', topH() - 16 + 'px'); map && map.invalidateSize(); }
   addEventListener('resize', setTop);
   function buildMap() {
     if (!window.L) { $('map').innerHTML = '<p class="where" style="padding:24px">The map couldn’t load.</p>'; return; }
@@ -1267,7 +1271,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     setTimeout(() => c.classList.remove('snap'), 340);
     if (cardDragged) {
       if (!shut && (dy > 60 || v > .5)) setShelf(true);                                              // open → tucked bar with the name
-      else if (shut && current && (dy > 40 || v > .4)) { current = null; renderMap(); renderCard(); }   // tucked → back to the start
+      else if (shut && current && (dy > 40 || v > .4)) { current = null; updateSel(); renderCard(); showAll(); }   // tucked → back to the start, zoomed out
       else if (shut && (dy < -24 || v < -.3)) { setShelf(false); if (!current) pick(); }
     } else if (shut) { setShelf(false); if (!current) pick(); }
     setTimeout(() => { cardDragged = false; }, 0);
@@ -1352,7 +1356,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     if (current && (!state.places.includes(current) || !fits(current))) current = null;
     renderAsk(); renderMap(); renderCard();
   }
-  buildMap(); refresh();
+  buildMap(); refresh(); setTop();
   // tapping the name starts afresh: filters cleared, nothing picked, map back to its first view
   $('home').addEventListener('click', e => { e.preventDefault(); hop(); state.f = blankF(); save(); setTimeout(() => location.reload(), 420); });
 
