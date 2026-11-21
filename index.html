@@ -720,10 +720,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
   :root { --sea:#e9e9e6; --land:#fff; --town:#f1f1ef; --road:#cfcfca; }
   @media (prefers-color-scheme: dark) { :root:not([data-theme=light]) { --sea:#161616; --land:#0b0b0b; --town:#1c1c1c; --road:#3a3a38; } }
   :root[data-theme=dark] { --sea:#161616; --land:#0b0b0b; --town:#1c1c1c; --road:#3a3a38; }
-  .leaflet-tile-pane { filter:brightness(.93) contrast(1.06); }   /* a shade darker than Esri's grey */
+  .leaflet-tile-pane { filter:brightness(.8) contrast(1.12); }   /* noticeably darker than Esri's grey */
   @media (prefers-color-scheme: dark) { :root:not([data-theme=light]) .leaflet-tile-pane { filter:brightness(.9) contrast(1.05); } }
   :root[data-theme=dark] .leaflet-tile-pane { filter:brightness(.9) contrast(1.05); }
-  :root { --sea:#e0e0dd; --land:#f6f6f4; }
+  :root { --sea:#c9c9c5; --land:#e2e2df; }
   .credit-map { display:flex; align-items:center; gap:6px; flex-direction:row-reverse; }
   .credit-map button { width:20px; height:20px; border-radius:50%; font:italic 600 11px/20px Georgia, serif; color:var(--soft); background:color-mix(in srgb, var(--bg) 80%, transparent); box-shadow:0 0 0 1px var(--faint); }
   .credit-map span { display:none; font-size:10px; color:var(--soft); background:color-mix(in srgb, var(--bg) 85%, transparent); padding:3px 8px; border-radius:8px; max-width:220px; }
