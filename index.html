@@ -1091,8 +1091,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
     if (tiles) tiles.remove();
     // Esri's grey canvas: quiet base, plus its sparse labels layer turned down a touch. No key needed.
     const shade = dark.matches ? 'Dark' : 'Light', svc = n => `https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_${shade}_Gray_${n}/MapServer/tile/{z}/{y}/{x}`;
-    base = L.tileLayer(svc('Base'), { maxZoom:16, crossOrigin:'anonymous' }).on('load', edgeSoon);
-    tiles = L.layerGroup([base, L.tileLayer(svc('Reference'), { maxZoom:16, opacity:.6 })]).addTo(map);
+    base = L.tileLayer(svc('Base'), { maxZoom:16, crossOrigin:'anonymous', keepBuffer:6, updateWhenZooming:false }).on('load', edgeSoon);
+    tiles = L.layerGroup([base, L.tileLayer(svc('Reference'), { maxZoom:16, opacity:.6, keepBuffer:6, updateWhenZooming:false })]).addTo(map);
   }
   const topH = () => phone() ? $('ask').getBoundingClientRect().bottom + 16 : 0;
   // space the shelf covers, measured from the bottom of the map (which runs past the screen, under Safari's bar)
@@ -1120,7 +1120,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   }
   function renderMap() {
     if (!map) return;
-    layer.clearLayers(); marks.clear();
+    layer.clearLayers(); marks.clear(); drawnSel = current;
     [...state.places].sort((a, b) => fits(a) - fits(b) || (a === current) - (b === current)).forEach(p => {
       if (!p.at) return;
       const sel = p === current, cls = `mk${p.been.length ? ' been' : ''}${fits(p) ? '' : ' out'}${sel ? ' sel' : ''}`;
@@ -1131,6 +1131,15 @@ svg.leaflet-image-layer.leaflet-interactive path {
       marks.set(p.id, m);
     });
   }
+  let drawnSel = null;
+  function markSel(p, on) {
+    const m = p && marks.get(p.id), el = m && m.getElement(); if (!el) return;
+    el.querySelector('.mk').classList.toggle('sel', on);
+    el.querySelector('.lb')?.remove();
+    if (on) el.insertAdjacentHTML('beforeend', `<span class="lb">${esc(p.name)}</span>`);
+    m.setZIndexOffset(on ? 1000 : fits(p) ? 100 : 0);
+  }
+  function updateSel() { if (drawnSel === current) return; markSel(drawnSel, false); markSel(current, true); drawnSel = current; }
   // bring a place into view, nudged up so it isn't hidden under the shelf on a phone
   let lastShelf = 0;
   new ResizeObserver(() => {
@@ -1145,8 +1154,11 @@ svg.leaflet-image-layer.leaflet-interactive path {
     if (!map || !p.at) return;
     const z = keepZoom ? map.getZoom() : Math.max(map.getZoom(), p.mins > 40 ? 10 : 13);
     const pt = map.project(p.at, z).add([0, (botH() - topH()) / 2]);
-    if (!keepZoom) { waiting(true); map.once('moveend', () => waiting(false)); }
-    keepZoom ? map.panTo(map.unproject(pt, z), { duration:.4 }) : map.flyTo(map.unproject(pt, z), z, { duration:.8 });
+    const to = map.unproject(pt, z), c = map.getSize(), d = map.project(to, map.getZoom()).subtract(map.project(map.getCenter(), map.getZoom()));
+    const near = z === map.getZoom() && Math.abs(d.x) < c.x * .9 && Math.abs(d.y) < c.y * .9;
+    waiting(true); map.once('moveend', () => waiting(false));
+    if (near) map.panTo(to, { animate:true, duration:keepZoom ? .4 : .6, easeLinearity:.2 });
+    else map.flyTo(to, z, { duration:Math.min(1.4, .7 + Math.hypot(d.x, d.y) / 4000), easeLinearity:.2 });
   }
 
   // ---------- photos: recent ones taken right at the place (Wikimedia Commons; only where the host allows it) ----------
@@ -1259,7 +1271,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   function select(p, animate, stayShut) {
     current = p; if (p && animate && !stayShut) shut = false;
-    renderMap(); renderCard(animate);
+    map ? updateSel() : renderMap(); renderCard(animate);
   }
 
   // ---------- pick ----------
