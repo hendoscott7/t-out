@@ -791,8 +791,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   .card.idle { background:none !important; box-shadow:none !important; padding:0 !important; overflow:visible; align-items:flex-end; }
   .act.fab { flex:none; width:60px !important; height:60px !important; color:var(--ink) !important;
              background:color-mix(in srgb, var(--bg) 42%, transparent) !important; -webkit-backdrop-filter:blur(18px) saturate(1.8); backdrop-filter:blur(18px) saturate(1.8);
-             border:1px solid color-mix(in srgb, var(--ink) 14%, transparent) !important;
-             box-shadow:inset 0 1px 0 color-mix(in srgb, #fff 45%, transparent), 0 10px 28px -10px rgba(0,0,0,.35); }
+             border:0 !important; box-shadow:none !important; }
   .act.fab:active, .act.fab.pressed { background:color-mix(in srgb, var(--bg) 70%, transparent) !important; }
   .act.fab svg { width:30px !important; height:30px !important; }
   .card .peek.start { display:flex !important; align-items:center; gap:16px; }
@@ -1242,7 +1241,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     dy = e.clientY - y0;
     if (!cardDragged && Math.abs(dy) < 6) return;
     cardDragged = true; $('card').classList.add('drag');
-    $('card').style.transform = `translateY(${shut ? Math.min(0, dy) * .35 : Math.max(0, dy)}px)`;
+    $('card').style.transform = `translateY(${shut ? (dy < 0 ? dy * .35 : current ? dy : 0) : Math.max(0, dy)}px)`;
   });
   addEventListener('pointerup', () => {
     if (y0 === null) return;
@@ -1250,7 +1249,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
     c.classList.remove('drag'); c.classList.add('snap'); c.style.transform = '';
     setTimeout(() => c.classList.remove('snap'), 340);
     if (cardDragged) {
-      if (!shut && (dy > 60 || v > .5)) { current = null; shut = phone(); renderMap(); renderCard(); }
+      if (!shut && (dy > 60 || v > .5)) setShelf(true);                                              // open → tucked bar with the name
+      else if (shut && current && (dy > 40 || v > .4)) { current = null; renderMap(); renderCard(); }   // tucked → back to the start
       else if (shut && (dy < -24 || v < -.3)) { setShelf(false); if (!current) pick(); }
     } else if (shut) { setShelf(false); if (!current) pick(); }
     setTimeout(() => { cardDragged = false; }, 0);
