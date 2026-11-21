@@ -775,6 +775,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   .act.round svg { width:22px; height:22px; }
   .act.round { width:44px; height:44px; }
   /* press feedback: outline buttons go solid, and the arrow gives a turn */
+  .act.round.quiet { border-color:color-mix(in srgb, var(--ink) 28%, transparent); color:color-mix(in srgb, var(--ink) 70%, transparent); }   /* secondary: soft outline */
   .act.round:active, .act.round.pressed { background:var(--ink); color:var(--paper); border-color:var(--ink); }
   .act.round.main:active, .act.round.main.pressed { transform:scale(.92); }
   .act.round.pressed svg { animation:turn .55s var(--ease); }
@@ -1161,7 +1162,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   function renderCard(animate) {
     const c = $('card'), p = current, n = state.places.filter(fits).length;
     c.classList.toggle('idle', !p); c.classList.remove('landed');
-    const peek = `<div class="peek"><span class="pn">${p ? esc(p.name) : n ? 'Where to?' : 'Nothing fits'}</span>${p ? `<button class="act round main" data-a="pick" aria-label="Another">${REFRESH}</button><button class="act round" data-a="open" aria-label="Show details"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg></button>` : ''}</div>`;
+    const peek = `<div class="peek"><span class="pn">${p ? esc(p.name) : n ? 'Where to?' : 'Nothing fits'}</span>${p ? `<button class="act round quiet" data-a="pick" aria-label="Another">${REFRESH}</button><button class="act round quiet" data-a="open" aria-label="Show details"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg></button>` : ''}</div>`;
     if (!p) {
       // before the first pick the shelf is just one line: tap the arrow (or pull up) and it chooses
       c.innerHTML = HANDLE + `<div class="peek start"><span class="pn">${n ? 'Where to?' : 'Nothing fits'}</span>
@@ -1173,7 +1174,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         <button class="ph" data-a="photos" aria-expanded="false" hidden><span class="phn"></span><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3.5L5 6.5 8 3.5"/></svg></button>
         <div class="photos" hidden></div><p class="credit" hidden></p>
         ${p.note ? `<p class="note">${esc(p.note)}</p>` : ''}
-        <button class="act round main corner" data-a="pick" aria-label="Another">${REFRESH}</button>
+        <button class="act round quiet corner" data-a="pick" aria-label="Another">${REFRESH}</button>
         <div class="acts">
           <a class="act main" href="${esc(dirUrl(p))}" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 11.2L20 4l-7.2 16.5-2.1-7.2z"/></svg>Directions</a>
         </div>`;
