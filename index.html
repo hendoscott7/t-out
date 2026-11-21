@@ -3,13 +3,23 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#a9cbe8">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b0b0b" media="(prefers-color-scheme: dark)">
 <title>T-Out</title>
 <style>
-  :root { --sky:#a9cbe8; --ink:#111; --soft:rgba(17,17,17,.55); --faint:rgba(17,17,17,.16); --paper:#f7f6f2; --ease:cubic-bezier(.65,0,.2,1); }
+  :root { color-scheme:light; --bg:#fff; --ink:#111; --soft:rgba(17,17,17,.55); --faint:rgba(17,17,17,.14); --paper:#f3f3f1; --lift:rgba(0,0,0,.18); --ease:cubic-bezier(.65,0,.2,1);
+          /* one colour per slice, plus a quiet tint for its tag */
+          --h0:#1d7a43; --t0:#e1f1e5; --h1:#c24d1f; --t1:#fbe5da; --h2:#c22f73; --t2:#f9e0eb;
+          --h3:#4d3bb0; --t3:#e7e3f8; --h4:#8a6a00; --t4:#f6edcc; --h5:#555; --t5:#ececea; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme=light]) { color-scheme:dark; --bg:#0b0b0b; --ink:#f2f2f0; --soft:rgba(242,242,240,.55); --faint:rgba(242,242,240,.14); --paper:#1a1a1a; --lift:rgba(0,0,0,.6);
+          --h0:#5fcb8a; --t0:rgba(95,203,138,.15); --h1:#f2905f; --t1:rgba(242,144,95,.15); --h2:#f27db4; --t2:rgba(242,125,180,.15);
+          --h3:#a596f5; --t3:rgba(165,150,245,.16); --h4:#e5c351; --t4:rgba(229,195,81,.15); --h5:#b5b5b0; --t5:rgba(181,181,176,.15); } }
+  :root[data-theme=dark] { color-scheme:dark; --bg:#0b0b0b; --ink:#f2f2f0; --soft:rgba(242,242,240,.55); --faint:rgba(242,242,240,.14); --paper:#1a1a1a; --lift:rgba(0,0,0,.6);
+          --h0:#5fcb8a; --t0:rgba(95,203,138,.15); --h1:#f2905f; --t1:rgba(242,144,95,.15); --h2:#f27db4; --t2:rgba(242,125,180,.15);
+          --h3:#a596f5; --t3:rgba(165,150,245,.16); --h4:#e5c351; --t4:rgba(229,195,81,.15); --h5:#b5b5b0; --t5:rgba(181,181,176,.15); }
   * { box-sizing:border-box; margin:0; }
-  html { background:var(--sky); }
-  body { font:400 15px/1.3 "Helvetica Neue", Helvetica, Arial, sans-serif; color:var(--ink); background:var(--sky);
+  html { background:var(--bg); }
+  body { font:400 15px/1.3 "Helvetica Neue", Helvetica, Arial, sans-serif; color:var(--ink); background:var(--bg);
          -webkit-font-smoothing:antialiased; height:100vh; height:100dvh; overflow:hidden; display:flex; flex-direction:column;
          padding:calc(16px + env(safe-area-inset-top)) 24px calc(20px + env(safe-area-inset-bottom)); }
   button, input, textarea { font:inherit; color:inherit; }
@@ -30,7 +40,7 @@
   .wx:active { transform:scale(.92); }
   .tools { display:flex; gap:6px; }
   .tool { height:36px; padding:0 14px; border:1.5px solid var(--ink); border-radius:18px; font-size:13px; font-weight:500; display:flex; align-items:center; gap:6px; }
-  .tool:active, .tool.on { background:var(--ink); color:var(--sky); }
+  .tool:active, .tool.on { background:var(--ink); color:var(--bg); }
 
   /* the sentence */
   .ask { flex:none; margin-top:clamp(12px, 2.5vh, 28px); font-size:clamp(21px, min(4.2vw, 4.4vh), 44px); line-height:1.12; letter-spacing:-.025em; font-weight:500; max-width:22ch; }
@@ -44,19 +54,19 @@
   /* stage */
   .stage { flex:1; min-height:0; margin-top:clamp(8px, 2vh, 24px); display:grid; grid-template-columns:minmax(0, 1.1fr) minmax(0, 1fr); gap:12px 56px; align-items:center; max-width:1280px; width:100%; }
   .rings { position:relative; height:100%; max-height:620px; aspect-ratio:1; max-width:100%; justify-self:center; align-self:center; min-height:0; }
-  .rings svg { width:100%; height:100%; overflow:visible; }
+  .rings svg { width:100%; height:100%; overflow:visible; color:var(--ink); }
   .ring { fill:none; stroke:var(--faint); stroke-width:.5; }
   .ring.k { stroke:var(--ink); stroke-opacity:.35; }
   .spoke { stroke:var(--faint); stroke-width:.5; }
   .rl { font-size:4.2px; fill:var(--soft); font-weight:500; }
-  .sl { font-size:5.4px; font-weight:700; letter-spacing:.02em; text-transform:uppercase; cursor:pointer; }
-  .sl.off { fill-opacity:.3; }
+  .sl { fill:var(--ink); font-size:5.4px; font-weight:700; letter-spacing:.02em; text-transform:uppercase; cursor:pointer; }
+  .sl.off { opacity:.3; }
   .home { fill:var(--ink); }
-  .pin { font-size:5.6px; font-weight:700; letter-spacing:-.01em; paint-order:stroke; stroke:var(--sky); stroke-width:2.4px; stroke-linejoin:round; pointer-events:none; }
+  .pin { fill:var(--ink); font-size:5.6px; font-weight:700; letter-spacing:-.01em; paint-order:stroke; stroke:var(--bg); stroke-width:2.4px; stroke-linejoin:round; pointer-events:none; }
   .dot { cursor:pointer; transition:opacity .25s, transform .3s var(--ease); transform-box:fill-box; transform-origin:center; }
   .dot circle { fill:var(--c, var(--ink)); stroke:var(--c, var(--ink)); stroke-width:.9; }
-  .dot.been circle { fill:var(--sky); }
-  .dot.out { opacity:.18; }
+  .dot.been circle { fill:var(--bg); }
+  .dot.out { opacity:.16; }
   .dot.mine circle.m { fill:none; stroke-width:.6; }
   .dot:hover { transform:scale(1.5); }
   .dot.sel { transform:scale(1.9); }
@@ -69,10 +79,10 @@
 
   /* card */
   .card { background:var(--paper); border-radius:28px; padding:22px 22px 18px; min-height:280px; display:flex; flex-direction:column;
-          box-shadow:0 18px 40px -22px rgba(0,0,0,.45); }
+          box-shadow:0 18px 40px -22px var(--lift); }
   .card .meta { display:flex; flex-wrap:wrap; gap:6px; }
   .card .meta { align-items:center; gap:10px; }
-  .tag { font-size:11px; font-weight:700; letter-spacing:.01em; padding:3px 8px 3px 7px; border-radius:6px; background:var(--tint, #e4e4e0); color:var(--c, var(--ink)); display:inline-flex; align-items:center; gap:5px; }
+  .tag { font-size:11px; font-weight:700; letter-spacing:.01em; padding:3px 8px 3px 7px; border-radius:6px; background:var(--tint, var(--t5)); color:var(--c, var(--ink)); display:inline-flex; align-items:center; gap:5px; }
   .tag::before { content:""; width:6px; height:6px; border-radius:50%; background:currentColor; }
   .tag.plain { background:none; color:var(--soft); font-weight:500; padding:0; }
   .tag.plain::before { display:none; }
@@ -86,7 +96,7 @@
          font-size:14px; font-weight:500; text-decoration:none; }
   .act.main { background:var(--ink); color:var(--paper); }
   .act:active { transform:scale(.97); }
-  .act.on { background:var(--sky); }
+  .act.on { background:var(--bg); }
   .card.idle h2 { color:var(--soft); cursor:default; }
   .card.landed > * { animation:rise .4s var(--ease) both; }
   .card.landed > :nth-child(2) { animation-delay:.04s; } .card.landed > :nth-child(3) { animation-delay:.08s; } .card.landed > :nth-child(4) { animation-delay:.12s; }
@@ -216,15 +226,8 @@
     ['Groups', ['group', 'market']],
     ['Other', ['other']],
   ];
-  // one colour per slice: dark enough to read on the sky, with a pale tint for tags
-  const HUE = [
-    { ink:'#1d6b3c', tint:'#d5ecd9' },   // Outdoors
-    { ink:'#b2441b', tint:'#f8dccd' },   // Animals
-    { ink:'#b62a6a', tint:'#f6d5e4' },   // Play
-    { ink:'#4836a0', tint:'#e0dbf5' },   // Museums
-    { ink:'#7d5f00', tint:'#f4e7b8' },   // Groups
-    { ink:'#333333', tint:'#e4e4e0' },   // Other
-  ];
+  // slice colours live in CSS (--h0…--h5, tints --t0…--t5) so light and dark mode each get their own
+  const HUE = [0, 1, 2, 3, 4, 5].map(i => ({ ink:`var(--h${i})`, tint:`var(--t${i})` }));
   const sectorOf = k => Math.max(0, SECTORS.findIndex(s => s[1].includes(k)));
 
   const IDEAS = [
@@ -333,12 +336,12 @@
     SECTORS.forEach(([name], i) => {
       const a = -Math.PI / 2 + i * w;
       el('line', { x1:0, y1:0, x2:RMAX * Math.cos(a), y2:RMAX * Math.sin(a), class:'spoke' }, svg);
-      const m = a + w / 2, t = el('text', { x:(RMAX + 10) * Math.cos(m), y:(RMAX + 10) * Math.sin(m) + 2, 'text-anchor':'middle', class:'sl', 'data-s':i, tabindex:0, role:'button', fill:HUE[i].ink }, svg);
+      const m = a + w / 2, t = el('text', { x:(RMAX + 10) * Math.cos(m), y:(RMAX + 10) * Math.sin(m) + 2, 'text-anchor':'middle', class:'sl', 'data-s':i, tabindex:0, role:'button', style:`fill:${HUE[i].ink}` }, svg);
       t.textContent = name;
     });
     sweep = el('g', { class:'sweep' }, svg);
-    el('path', { d:`M0 0L${RMAX} 0A${RMAX} ${RMAX} 0 0 0 ${RMAX * Math.cos(-.5)} ${RMAX * Math.sin(-.5)}Z`, fill:'#111', 'fill-opacity':.1 }, sweep);
-    el('line', { x1:0, y1:0, x2:RMAX, y2:0, stroke:'#111', 'stroke-width':.8 }, sweep);
+    el('path', { d:`M0 0L${RMAX} 0A${RMAX} ${RMAX} 0 0 0 ${RMAX * Math.cos(-.5)} ${RMAX * Math.sin(-.5)}Z`, fill:'currentColor', 'fill-opacity':.1 }, sweep);
+    el('line', { x1:0, y1:0, x2:RMAX, y2:0, stroke:'currentColor', 'stroke-width':.8 }, sweep);
     dotsG = el('g', {}, svg);
     halo = el('circle', { r:4, class:'halo' }, svg);
     el('circle', { r:2.6, class:'home' }, svg);
