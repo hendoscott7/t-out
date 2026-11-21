@@ -1063,7 +1063,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   function renderCard(animate) {
     const c = $('card'), p = current, n = state.places.filter(fits).length;
     c.classList.toggle('idle', !p); c.classList.remove('landed');
-    const peek = `<div class="peek"><span class="pn">${p ? esc(p.name) : n ? 'Flick up for a day out' : 'Nothing fits'}</span><button class="act round" data-a="pick" aria-label="${p ? 'Another' : 'Pick'}" ${n ? '' : 'disabled'}>${REFRESH}</button></div>`;
+    const peek = `<div class="peek"><span class="pn">${p ? esc(p.name) : n ? 'Where to?' : 'Nothing fits'}</span><button class="act round" data-a="pick" aria-label="${p ? 'Another' : 'Pick'}" ${n ? '' : 'disabled'}>${REFRESH}</button></div>`;
     if (!p) {
       c.innerHTML = HANDLE + peek + `<h2>${n ? 'Where to, Theo?' : 'Nothing fits.'}</h2>
         <p class="where">${n ? 'Further out means a longer drive.' : 'Tap an underlined word to loosen it.'}</p>
