@@ -788,9 +788,14 @@ svg.leaflet-image-layer.leaflet-interactive path {
   .card.landed > :not(.handle) { animation:rise .4s var(--ease) both; }
   @keyframes rise { from { opacity:0; transform:translateY(8px); } }
   .handle, .peek, .scrim { display:none; }
+  .act.go { flex:none; width:100%; height:56px; font-size:17px; font-weight:500; gap:10px; border-radius:28px; }
+  .act.go svg { width:22px; height:22px; }
+  .act.go:active, .act.go.pressed { transform:scale(.98); }
+  .act.go.pressed svg { animation:turn .55s var(--ease); }
   .card .peek.start { display:flex !important; align-items:center; gap:16px; }
   .card .peek.start .pn { flex:1; font-size:20px; font-weight:400; letter-spacing:-.02em; color:var(--ink); }
-  @media (min-width:821px) { .card.idle { padding-top:20px; padding-bottom:20px; } }
+  @media (min-width:821px) { .card.idle { padding:16px; } }
+  @media (max-width:820px) { .card.idle { padding:16px 16px calc(16px + env(safe-area-inset-bottom)) !important; } }
 
   /* edit sheet */
   .modal { position:fixed; inset:0; z-index:20; background:rgba(0,0,0,.32); display:flex; align-items:flex-end; justify-content:center; animation:fade .18s; }
@@ -844,7 +849,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     .handle { display:block; position:sticky; top:0; z-index:1; width:calc(100% + 48px); height:24px; margin:0 -24px 8px; background:var(--paper); cursor:grab; }
     .handle::before { content:""; position:absolute; left:50%; top:10px; width:40px; height:4px; margin-left:-20px; border-radius:2px; background:var(--faint); }
     .card.shut { padding-bottom:calc(20px + env(safe-area-inset-bottom)); }
-    .card.shut > :not(.handle):not(.peek) { display:none; }
+    .card.shut > :not(.handle):not(.peek):not(.go) { display:none; }
     .card.shut .peek { display:flex; align-items:center; gap:8px; margin-top:-4px; min-height:36px; }
     .peek .pn { flex:1; font-size:20px; font-weight:700; letter-spacing:-.03em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .card.idle .peek .pn { color:var(--soft); font-weight:500; }
@@ -1165,8 +1170,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     const peek = `<div class="peek"><span class="pn">${p ? esc(p.name) : n ? 'Where to?' : 'Nothing fits'}</span>${p ? `<button class="act round quiet" data-a="pick" aria-label="Another">${REFRESH}</button><button class="act round quiet" data-a="open" aria-label="Show details"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg></button>` : ''}</div>`;
     if (!p) {
       // before the first pick the shelf is just one line: tap the arrow (or pull up) and it chooses
-      c.innerHTML = HANDLE + `<div class="peek start"><span class="pn">${n ? 'Where to?' : 'Nothing fits'}</span>
-        <button class="act round main" data-a="pick" aria-label="Pick somewhere" ${n ? '' : 'disabled'}>${REFRESH}</button></div>`;
+      c.innerHTML = `<button class="act main go" data-a="pick" ${n ? '' : 'disabled'}>${REFRESH}<span>${n ? 'Where to?' : 'Nothing fits'}</span></button>`;
     } else {
       c.innerHTML = HANDLE + peek + `<div class="meta"><span class="tag" style="--c:${ink(p)};--tint:${tint(p)}">${SECTORS[sectorOf(p.kind)][0]}</span><span class="facts">${KINDS[p.kind] !== SECTORS[sectorOf(p.kind)][0] ? KINDS[p.kind] + ' · ' : ''}${WHERE[p.where]} · ${COST[p.cost]} · ${minsLabel(p.mins)}</span></div>
         <h2>${esc(p.name)}</h2>
@@ -1193,7 +1197,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     const a = e.target.closest('[data-a]');
     if (!a) return;
     if (a.dataset.a === 'open') { setShelf(false); if (current) requestAnimationFrame(() => centreOn(current, true)); return; }
-    if (a.dataset.a === 'pick') { pressedUntil = Date.now() + 500; setTimeout(() => document.querySelectorAll('.pressed').forEach(b => b.classList.remove('pressed')), 560); if (shut) setShelf(false); pick(); }
+    if (a.dataset.a === 'pick') { pressedUntil = Date.now() + 500; setTimeout(() => document.querySelectorAll('.pressed').forEach(b => b.classList.remove('pressed')), 560); if (shut && !current) setShelf(false); pick(shut && !!current); }
     if (a.dataset.a === 'photos') { state.photosOpen = !state.photosOpen; save(); showPhotos(state.photosOpen); }
   });
   // flick the shelf: up opens it (and picks somewhere if nothing's chosen yet), down tucks it away
@@ -1223,8 +1227,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
   });
   addEventListener('resize', () => { if (!phone() && shut) setShelf(false); });
 
-  function select(p, animate) {
-    current = p; if (p && animate) shut = false;
+  function select(p, animate, stayShut) {
+    current = p; if (p && animate && !stayShut) shut = false;
     renderMap(); renderCard(animate);
   }
 
@@ -1237,14 +1241,14 @@ svg.leaflet-image-layer.leaflet-interactive path {
     return w;
   }
   let busy = false;
-  function pick() {
+  function pick(stayShut) {
     if (busy) return;
     const c = state.places.filter(fits).filter(p => p !== current);
     if (!c.length) { toast(current ? 'That’s the only one that fits' : 'Nothing fits. Tap an underlined word'); return; }
     let r = Math.random() * c.reduce((s, p) => s + weight(p), 0), win = c[c.length - 1];
     for (const p of c) { r -= weight(p); if (r <= 0) { win = p; break; } }
     state.last = [win.id, ...state.last.filter(x => x !== win.id)].slice(0, 6); save();
-    select(win, true); requestAnimationFrame(() => centreOn(win));
+    select(win, true, stayShut); requestAnimationFrame(() => centreOn(win));
   }
 
   // ---------- edit ----------
