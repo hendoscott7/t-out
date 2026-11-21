@@ -755,6 +755,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
   .photos::-webkit-scrollbar { display:none; }
   .photos a { flex:none; scroll-snap-align:start; }
   .photos img { display:block; height:96px; width:128px; object-fit:cover; border-radius:14px; scroll-snap-align:start; background:var(--faint); animation:rise .4s var(--ease) both; }
+  .ph { margin-top:16px; display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:500; color:var(--soft); padding:6px 0; }
+  .ph svg { transition:transform .25s var(--ease); }
+  .ph.on svg { transform:rotate(180deg); }
+  .ph + .photos { margin-top:8px; }
   .credit { margin-top:8px; font-size:11px; color:var(--soft); }
   .note { margin-top:16px; line-height:1.4; max-width:36ch; }
   .acts { margin-top:auto; padding-top:40px; display:flex; gap:8px; }
@@ -795,9 +799,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   @media (max-width:820px) {
     body { padding:calc(16px + env(safe-area-inset-top)) 16px 0; }
-    .word { font-size:72px; }
-    .wx svg { width:44px; height:44px; } .wx .deg { font-size:26px; } .wx { height:44px; }
-    .ask { font-size:22px; }
+    .word { font-size:60px; }
+    .wx svg { width:38px; height:38px; } .wx .deg { font-size:22px; } .wx { height:38px; }
+    .ask { font-size:19px; }
     /* the shelf floats over the page, so the radar never changes size */
     .stage { grid-template-columns:minmax(0, 1fr); margin-top:20px; align-items:stretch; }
     .well { gap:16px; }
@@ -819,14 +823,16 @@ svg.leaflet-image-layer.leaflet-interactive path {
     .card.shut .peek { display:flex; align-items:center; gap:16px; margin-top:-4px; min-height:36px; }
     .peek .pn { flex:1; font-size:20px; font-weight:700; letter-spacing:-.03em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .card.idle .peek .pn { color:var(--soft); font-weight:500; }
-    .card h2 { font-size:34px; margin-top:16px; }
+    .card h2 { font-size:28px; margin-top:14px; }
+    .where, .note { font-size:14px; }
+    .card .peek.start .pn, .peek .pn { font-size:18px; }
     .act.corner { top:32px; right:24px; }
     .card.shut .act.corner { display:none; }
     .photos { margin:16px -24px 0; padding:0 24px; scroll-padding:0 24px; }
     .acts { padding-top:32px; }
   }
-  @media (max-width:820px) and (max-height:700px) { .word { font-size:56px; } .ask { font-size:19px; } .stage { margin-top:8px; } }
-  @media (max-width:380px) { .ask { font-size:19px; letter-spacing:-.03em; } }
+  @media (max-width:820px) and (max-height:700px) { .word { font-size:50px; } .ask { font-size:17px; } .stage { margin-top:8px; } }
+  @media (max-width:380px) { .ask { font-size:17px; letter-spacing:-.03em; } }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation:none !important; transition:none !important; } }
 </style>
 </head>
@@ -1055,11 +1061,16 @@ svg.leaflet-image-layer.leaflet-interactive path {
     });
   }
   // bring a place into view, nudged up so it isn't hidden under the shelf on a phone
-  function centreOn(p) {
+  let lastShelf = 0;
+  new ResizeObserver(() => {
+    const h = $('card').offsetHeight;
+    if (current && phone() && Math.abs(h - lastShelf) > 8) { lastShelf = h; centreOn(current, true); }
+  }).observe($('card'));
+  function centreOn(p, keepZoom) {
     if (!map || !p.at) return;
-    const z = Math.max(map.getZoom(), p.mins > 40 ? 10 : 13);
+    const z = keepZoom ? map.getZoom() : Math.max(map.getZoom(), p.mins > 40 ? 10 : 13);
     const pt = map.project(p.at, z).add([0, (botH() - topH()) / 2]);
-    map.flyTo(map.unproject(pt, z), z, { duration:.8 });
+    keepZoom ? map.panTo(map.unproject(pt, z), { duration:.4 }) : map.flyTo(map.unproject(pt, z), z, { duration:.8 });
   }
 
   // ---------- photos: recent ones taken right at the place (Wikimedia Commons; only where the host allows it) ----------
@@ -1089,9 +1100,16 @@ svg.leaflet-image-layer.leaflet-interactive path {
       if (current !== p || !o.imgs.length) return;
       const box = $('card').querySelector('.photos'); if (!box) return;
       box.innerHTML = o.imgs.map(i => `<a href="${esc(i.page)}" target="_blank" rel="noopener"><img src="${esc(i.src)}" alt="Photo, ${i.y}" loading="lazy" onerror="this.parentNode.remove()"></a>`).join('');
-      box.hidden = false;
-      const c = $('card').querySelector('.credit'); c.innerHTML = `Recent photos from <a href="${esc(o.page)}" target="_blank" rel="noopener">Wikimedia Commons</a>`; c.hidden = false;
+      $('card').querySelector('.credit').innerHTML = `Recent photos from <a href="${esc(o.page)}" target="_blank" rel="noopener">Wikimedia Commons</a>`;
+      const t = $('card').querySelector('.ph'); t.querySelector('.phn').textContent = `${o.imgs.length} recent photo${o.imgs.length > 1 ? 's' : ''}`; t.hidden = false;
+      showPhotos(!!state.photosOpen);
     }).catch(() => {});
+  }
+
+  function showPhotos(on) {
+    const c = $('card'), t = c.querySelector('.ph'); if (!t || t.hidden) return;
+    c.querySelector('.photos').hidden = c.querySelector('.credit').hidden = !on;
+    t.setAttribute('aria-expanded', String(on)); t.classList.toggle('on', on);
   }
 
   // ---------- the shelf ----------
@@ -1110,6 +1128,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       c.innerHTML = HANDLE + peek + `<div class="meta"><span class="tag" style="--c:${ink(p)};--tint:${tint(p)}">${KINDS[p.kind]}</span><span class="facts">${WHERE[p.where]} · ${COST[p.cost]} · ${minsLabel(p.mins)}</span></div>
         <h2 data-a="edit" title="Edit">${esc(p.name)}</h2>
         <p class="where">${esc([p.area, p.been.length ? 'last went ' + ago(p.been[p.been.length - 1]) : 'never been'].filter(Boolean).join(' · '))}</p>
+        <button class="ph" data-a="photos" aria-expanded="false" hidden><span class="phn"></span><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3.5L5 6.5 8 3.5"/></svg></button>
         <div class="photos" hidden></div><p class="credit" hidden></p>
         ${p.note ? `<p class="note">${esc(p.note)}</p>` : ''}
         <button class="act round corner" data-a="pick" aria-label="Another">${REFRESH}</button>
@@ -1131,6 +1150,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     if (!a) return;
     if (a.dataset.a === 'pick') { if (shut) setShelf(false); pick(); }
     if (a.dataset.a === 'edit') openEdit(current);
+    if (a.dataset.a === 'photos') { state.photosOpen = !state.photosOpen; save(); showPhotos(state.photosOpen); }
   });
   // flick the shelf: up opens it (and picks somewhere if nothing's chosen yet), down tucks it away
   let y0 = null, dy = 0, t0 = 0, cardDragged = false;
