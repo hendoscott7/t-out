@@ -51,8 +51,8 @@
 
   /* one spacing scale: 8 · 16 · 24 · 40 */
   .stage { flex:1; min-height:0; margin-top:24px; display:grid; grid-template-columns:minmax(0, 1.1fr) minmax(0, 1fr); grid-template-rows:minmax(0, 1fr); gap:24px 40px; align-items:center; max-width:1280px; width:100%; }
-  .well { height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:24px; }
-  .rings { position:relative; flex:none; width:var(--rs, 320px); aspect-ratio:120 / 98; }
+  .well { height:100%; display:flex; flex-direction:column; align-items:stretch; gap:24px; }
+  .rings { position:relative; flex:1; min-height:0; width:100%; }
   .rings > svg { width:100%; height:100%; color:var(--ink); touch-action:none; cursor:grab; overflow:hidden; -webkit-user-select:none; user-select:none; }
   .rings > svg.panning { cursor:grabbing; }
   .ring { fill:none; stroke:var(--faint); stroke-width:1px; vector-effect:non-scaling-stroke; }
@@ -132,6 +132,7 @@
     /* the shelf floats over the page, so the radar never changes size */
     .stage { grid-template-columns:minmax(0, 1fr); margin-top:20px; align-items:start; padding-bottom:calc(104px + env(safe-area-inset-bottom)); }
     .well { gap:16px; justify-content:flex-start; }
+    .rings { margin:0 -16px; width:auto; }
     .card { position:fixed; left:8px; right:8px; bottom:calc(8px + env(safe-area-inset-bottom)); z-index:10; max-height:min(80dvh, 660px);
             padding:0 20px 20px; border-radius:32px; box-shadow:0 -8px 40px -16px var(--lift), 0 0 0 1px var(--faint); touch-action:pan-y; }
     .card.drag { transition:none !important; }
@@ -296,9 +297,11 @@
   const el = (t, a, parent) => { const n = document.createElementNS(NS, t); for (const k in a) n.setAttribute(k, a[k]); parent && parent.appendChild(n); return n; };
   let svg, dotsG, sweep;
   const view = { z:1, x:0, y:0 };
+  // user units per screen pixel at zoom 1: the whole drawing fits the box, whatever its shape
+  const unit = () => { const r = svg.getBoundingClientRect(); return Math.max(2 * HX / r.width, 2 * HY / r.height) || 1; };
   function applyView() {
-    const w = 2 * HX / view.z, h = 2 * HY / view.z, lx = HX - w / 2, ly = HY - h / 2;
-    view.x = Math.max(-lx, Math.min(lx, view.x)); view.y = Math.max(-ly, Math.min(ly, view.y));
+    const r = svg.getBoundingClientRect(), u = unit() / view.z, w = r.width * u, h = r.height * u;
+    view.x = Math.max(-HX * .8, Math.min(HX * .8, view.x)); view.y = Math.max(-HY * .8, Math.min(HY * .8, view.y));   // free to roam; home stays in reach
     svg.setAttribute('viewBox', `${view.x - w / 2} ${view.y - h / 2} ${w} ${h}`);
     svg.style.setProperty('--iz', 1 / view.z);
     svg.classList.toggle('names', view.z >= 2.2);
@@ -307,7 +310,7 @@
     const z = Math.max(1, Math.min(7, view.z * f)), k = view.z / z;
     view.x = ux - (ux - view.x) * k; view.y = uy - (uy - view.y) * k; view.z = z; applyView();
   }
-  const toUser = (cx, cy) => { const r = svg.getBoundingClientRect(); return [view.x + ((cx - r.left) / r.width - .5) * 2 * HX / view.z, view.y + ((cy - r.top) / r.height - .5) * 2 * HY / view.z]; };
+  const toUser = (cx, cy) => { const r = svg.getBoundingClientRect(), u = unit() / view.z; return [view.x + (cx - r.left - r.width / 2) * u, view.y + (cy - r.top - r.height / 2) * u]; };
 
   function buildRings() {
     svg = el('svg', { viewBox:`${-HX} ${-HY} ${2 * HX} ${2 * HY}`, role:'group' });
@@ -339,7 +342,7 @@
     svg.addEventListener('pointermove', e => {
       if (!pts.has(e.pointerId)) return;
       pts.set(e.pointerId, [e.clientX, e.clientY]);
-      const r = svg.getBoundingClientRect(), upp = 2 * HX / start.z / r.width;
+      const r = svg.getBoundingClientRect(), upp = unit() / start.z;
       if (pts.size === 1 && start.pts.size === 1) {
         const [x0, y0] = [...start.pts.values()][0], dx = e.clientX - x0, dy = e.clientY - y0;
         if (!dragged && Math.hypot(dx, dy) < 6) return;
@@ -559,11 +562,7 @@
     if (current && (!state.places.includes(current) || !fits(current))) current = null;
     renderAsk(); renderRings(); renderCard();
   }
-  function sizeRings() {
-    const w = $('well'), gap = parseFloat(getComputedStyle(w).rowGap) || 0;
-    const size = Math.floor(Math.min(w.clientWidth, (w.clientHeight - $('ask').offsetHeight - gap) * HX / HY, 760));
-    document.documentElement.style.setProperty('--rs', Math.max(200, size) + 'px');
-  }
+  const sizeRings = () => applyView();
   addEventListener('resize', sizeRings);
   buildRings(); refresh(); sizeRings();
 
