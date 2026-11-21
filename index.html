@@ -51,11 +51,12 @@
 
   /* the sentence: fixed size and a fixed three-line box, so changing a word never moves anything */
   .ask { flex:none; width:100%; font-size:34px; line-height:1.12; height:1.12em; white-space:nowrap; letter-spacing:-.025em; font-weight:500; }
-  .ask button { font-weight:500; text-decoration:underline; text-decoration-thickness:.07em; text-underline-offset:.12em; text-decoration-color:var(--soft); }
-  .ask button.set { text-decoration-color:var(--ink); }
-  .ask button:active { opacity:.6; }
+  /* each choice is a quiet chip with a tiny chevron, so it reads as something you can change */
+  .ask button { font-weight:500; padding:.04em .22em .06em .26em; margin:0; border-radius:.42em; background:color-mix(in srgb, var(--ink) 6%, transparent); transition:background .15s, transform .1s; }
+  .ask button::after { content:""; display:inline-block; width:.26em; height:.26em; margin-left:.16em; vertical-align:.18em; border-right:.09em solid currentColor; border-bottom:.09em solid currentColor; transform:rotate(45deg); opacity:.45; }
+  .ask button:active { background:color-mix(in srgb, var(--ink) 14%, transparent); transform:scale(.97); }
   .ask .any { color:var(--soft); }
-  .ask .dots { display:inline-flex; gap:2px; margin-left:5px; vertical-align:middle; position:relative; top:-.06em; }
+  .ask .dots { display:inline-flex; gap:2px; margin-left:4px; vertical-align:middle; position:relative; top:-.06em; }
   .ask .dots i { width:.28em; height:.28em; border-radius:50%; display:block; }
 
   /* Leaflet's own styles, inlined so the page carries everything it needs */
@@ -831,7 +832,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     .logo { width:46px; height:46px; margin:0 0 0 -4px; }
     .ask { text-align:center; }
     .wx svg { width:38px; height:38px; } .wx .deg { font-size:22px; } .wx { height:38px; }
-    .ask { font-size:min(24px, 4.85vw); letter-spacing:-.03em; }
+    .ask { font-size:min(22px, 4.5vw); letter-spacing:-.03em; word-spacing:-.05em; margin:0 -10px; width:calc(100% + 20px); }
     /* the shelf floats over the page, so the radar never changes size */
     .stage { grid-template-columns:minmax(0, 1fr); margin-top:20px; align-items:stretch; }
     .well { gap:16px; }
@@ -1019,7 +1020,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     };
     const b = (k, cap) => { const o = ASK[k].find(x => x[0] === state.f[k]) || ASK[k][0], t = cap ? o[1][0].toUpperCase() + o[1].slice(1) : o[1];
       return `<button data-k="${k}" class="${o[0] !== ASK[k][0][0] ? 'set' : 'any'}" aria-label="${k}: ${o[1]}. Tap to change">${t}</button>`; };
-    $('ask').innerHTML = `<span>${b('wx')},</span> <span>${b('cost')},</span> <span>${kind()}</span>`;
+    $('ask').innerHTML = `<span>${b('wx')}</span> <span>${b('cost')}</span> <span>${kind()}</span>`;
   }
   $('ask').addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
