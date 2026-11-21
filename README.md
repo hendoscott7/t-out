@@ -9,6 +9,7 @@ Open `index.html` in a browser. It's one self-contained page.
 - **The sentence**: "It's raining, run him ragged, free, under 30 min, somewhere new." Tap any underlined phrase to cycle through its options. Grey means "any".
 - **The rings** are a radar of everything. Home sits in the middle, and the further out a dot is, the longer the drive. Slices are kinds of place; tap a slice name to show only that slice. Filled dots are places you haven't been, hollow ones you have, and ringed ones came from your own list. Places that don't fit fade out.
 - **Pick for me / Another** sweeps the radar and lands on a place. It favours places you haven't been and your own list, and avoids recent picks.
+- **The weather symbol** by the date shows the forecast for Belfast today (Open-Meteo). On your first look each day it sets the weather phrase to match; tap the symbol to toggle it.
 - **We went** logs a visit for today.
 - **Index** lists every place by kind. Tap one to fix its tags, add a note, or remove it.
 - **Add** takes names one per line, or Google's `Want to go.csv` (takeout.google.com, tick **Saved**). Tags are guessed, and an orange dot means check them.

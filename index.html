@@ -23,6 +23,10 @@
   .word { font-weight:700; font-size:clamp(64px, 13vw, 168px); line-height:.82; letter-spacing:-.06em; margin-left:-.04em; }
   .side { display:flex; flex-direction:column; align-items:flex-end; gap:10px; padding-top:6px; }
   .date { font-size:13px; font-weight:500; text-align:right; line-height:1.25; }
+  .today { display:flex; align-items:center; gap:12px; }
+  .wx { width:46px; height:46px; display:grid; place-items:center; animation:rise .5s var(--ease) both; }
+  .wx svg { width:46px; height:46px; stroke:var(--ink); stroke-width:2.2; fill:none; stroke-linecap:round; stroke-linejoin:round; overflow:visible; }
+  .wx:active { transform:scale(.92); }
   .tools { display:flex; gap:6px; }
   .tool { height:36px; padding:0 14px; border:1.5px solid var(--ink); border-radius:18px; font-size:13px; font-weight:500; display:flex; align-items:center; gap:6px; }
   .tool:active, .tool.on { background:var(--ink); color:var(--sky); }
@@ -136,7 +140,7 @@
   <header class="mast">
     <h1 class="word">T-Out</h1>
     <div class="side">
-      <div class="date" id="date"></div>
+      <div class="today"><button class="wx" id="wx" hidden></button><div class="date" id="date"></div></div>
       <div class="tools">
         <button class="tool" id="openIdx" aria-label="Index of places">Index</button>
         <button class="tool" id="openAdd" aria-label="Add places"><svg width="12" height="12" viewBox="0 0 12 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 1v10M1 6h10"/></svg>Add</button>
@@ -568,6 +572,53 @@
   }
   $('date').innerHTML = new Date().toLocaleDateString('en-GB', { weekday:'long' }) + '<br>' + new Date().toLocaleDateString('en-GB', { day:'numeric', month:'long' });
   buildRings(); refresh();
+
+  // ---------- today's weather: one symbol, from Open-Meteo (no key needed) ----------
+  const WX_ICONS = {
+    sun:   '<circle cx="24" cy="24" r="8"/><path d="M24 6v5M24 37v5M6 24h5M37 24h5M11.3 11.3l3.5 3.5M33.2 33.2l3.5 3.5M11.3 36.7l3.5-3.5M33.2 14.8l3.5-3.5"/>',
+    part:  '<circle cx="18" cy="17" r="6"/><path d="M18 5v3M6 17h3M9.5 8.5l2.1 2.1M26.5 8.5l-2.1 2.1"/><path d="M15 38h20a7 7 0 0 0 .6-14 9 9 0 0 0-17.2 2.4A5.8 5.8 0 0 0 15 38z"/>',
+    cloud: '<path d="M12 36h23a8 8 0 0 0 .7-16 10.5 10.5 0 0 0-20.2 2.7A6.7 6.7 0 0 0 12 36z"/>',
+    rain:  '<path d="M12 29h23a8 8 0 0 0 .7-16 10.5 10.5 0 0 0-20.2 2.7A6.7 6.7 0 0 0 12 29z"/><path d="M16 35l-2 5M24 35l-2 5M32 35l-2 5"/>',
+    snow:  '<path d="M12 29h23a8 8 0 0 0 .7-16 10.5 10.5 0 0 0-20.2 2.7A6.7 6.7 0 0 0 12 29z"/><path d="M16 36v.1M24 39v.1M32 36v.1M20 43v.1M28 43v.1" stroke-width="3.4"/>',
+    storm: '<path d="M12 29h23a8 8 0 0 0 .7-16 10.5 10.5 0 0 0-20.2 2.7A6.7 6.7 0 0 0 12 29z"/><path d="M25 31l-4 7h6l-4 7"/>',
+    fog:   '<path d="M10 18h28M6 25h32M12 32h28M8 39h20"/>',
+  };
+  const wxKind = c => c === 0 ? 'sun' : c <= 2 ? 'part' : c === 3 ? 'cloud' : c <= 48 ? 'fog' : c <= 67 ? 'rain' : c <= 77 ? 'snow' : c <= 82 ? 'rain' : c <= 86 ? 'snow' : 'storm';
+  const WX_WORD = { sun:'Sunny', part:'Sunny spells', cloud:'Cloudy', rain:'Rain', snow:'Snow', storm:'Thunder', fog:'Fog' };
+  let wxToday = null;
+  function showWx(w) {
+    wxToday = w; const k = wxKind(w.code), wet = ['rain', 'snow', 'storm'].includes(k) || w.pop >= 60;
+    w.wet = wet;
+    const label = `${WX_WORD[k]}, ${Math.round(w.max)}°${w.pop != null ? `, ${w.pop}% chance of rain` : ''}`;
+    $('wx').innerHTML = `<svg viewBox="0 0 48 48" aria-hidden="true">${WX_ICONS[k]}</svg>`;
+    $('wx').title = label + '. Tap to match the weather.';
+    $('wx').setAttribute('aria-label', `Today: ${label}. Tap to filter for it.`);
+    $('wx').hidden = false;
+    // first look of the day: let the forecast set the weather phrase, unless you've already chosen one
+    if (state.wxSet !== today()) {
+      state.wxSet = today();
+      if (state.f.wx === 'any') { state.f.wx = wet ? 'rain' : 'dry'; save(); refresh(); toast(wet ? 'Rain forecast. Showing places that work in the wet' : 'Dry forecast. Outdoors is on'); }
+      else save();
+    }
+  }
+  $('wx').addEventListener('click', () => {
+    if (!wxToday) return;
+    const want = wxToday.wet ? 'rain' : 'dry';
+    state.f.wx = state.f.wx === want ? 'any' : want; save(); refresh();
+  });
+  (async () => {
+    try {
+      const c = JSON.parse(localStorage.getItem(LS + '-wx') || 'null');
+      if (c && c.day === today() && Date.now() - c.at < 3 * 36e5) return showWx(c);
+    } catch (e) {}
+    try {
+      const r = await fetch('https://api.open-meteo.com/v1/forecast?latitude=54.597&longitude=-5.930&daily=weather_code,temperature_2m_max,precipitation_probability_max&timezone=Europe%2FLondon&forecast_days=1');
+      const d = (await r.json()).daily;
+      const w = { day:today(), at:Date.now(), code:d.weather_code[0], max:d.temperature_2m_max[0], pop:d.precipitation_probability_max[0] };
+      try { localStorage.setItem(LS + '-wx', JSON.stringify(w)); } catch (e) {}
+      showWx(w);
+    } catch (e) { /* offline: no symbol, nothing else changes */ }
+  })();
 })();
 </script>
 </body>
