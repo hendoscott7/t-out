@@ -11,7 +11,7 @@ Live: https://hendoscott7.github.io/t-out/
   - **Mood:** any mood / run him ragged / keep it calm.
   - **Price:** any price / free / cheap.
   - **Distance:** any distance / under 15 min / under 30 min / under an hour.
-  - **Kind:** every kind, or one kind in its own colour. This is also the colour key for the map dots.
+  - **Kind:** every kind, or one kind in its own colour (outdoors, animals, museums, groups, other). This is also the colour key for the map dots. No soft play: Theo doesn't like it.
 - **The map** shows every place as a dot in its kind's colour. Places that don't fit the sentence fade out, and hollow dots are places you've been. Drag, pinch and tap as normal. The ⓘ shows the map credits.
 - **The shelf** at the bottom says "Where to?". Pull it up and it picks somewhere, favouring places you haven't been and avoiding recent picks. The map flies to the pick.
   - The open shelf shows the kind, inside/outside, cost and drive time, a note, recent photos taken near the place (Wikimedia Commons, 2018 on), and **Directions** to Google Maps.
@@ -27,7 +27,7 @@ Everything is in `index.html`:
 
 - `IDEAS` lists each place: `[id, name, area, kind, inside/outside/both, cost 0–2, minutes from Belfast, mood, note]`.
 - `AT` gives each place's `[lat, lng]`. These are approximate.
-- Kinds and their colours: outdoors (park, woods, beach) green, animals rust, soft play pink, museums and space indigo, groups and markets ochre, other grey (`--h0`…`--h5` in the CSS).
+- Kinds and their colours: outdoors (park, woods, beach) green, animals rust, museums and space indigo, groups and markets ochre, other grey (`--h0`…`--h5` in the CSS).
 
 New ideas appear for existing users on their next visit. Ones they've removed don't come back.
 

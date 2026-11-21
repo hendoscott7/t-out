@@ -876,12 +876,12 @@ svg.leaflet-image-layer.leaflet-interactive path {
   const LS = 't-out';
   const NS = 'http://www.w3.org/2000/svg';
 
-  const KINDS = { park:'Park & playground', woods:'Woods & trails', beach:'Beach', animals:'Animals', play:'Soft play', museum:'Museum', space:'Space', group:'Groups & classes', market:'Market', other:'Other' };
+  const KINDS = { park:'Park & playground', woods:'Woods & trails', beach:'Beach', animals:'Animals', museum:'Museum', space:'Space', group:'Groups & classes', market:'Market', other:'Other' };
   const WHERE = { in:'Inside', out:'Outside', both:'In & out' };
   const COST = ['Free', '£', '££'];
   const MINS = [10, 20, 30, 45, 60, 90];
   const ENERGY = { run:'Run it off', calm:'Calm', mix:'Bit of both' };
-  const SECTORS = [['Outdoors', ['park', 'woods', 'beach']], ['Animals', ['animals']], ['Play', ['play']], ['Museums', ['museum', 'space']], ['Groups', ['group', 'market']], ['Other', ['other']]];
+  const SECTORS = [['Outdoors', ['park', 'woods', 'beach']], ['Animals', ['animals']], ['Play', []], ['Museums', ['museum', 'space']], ['Groups', ['group', 'market']], ['Other', ['other']]];
   const sectorOf = k => Math.max(0, SECTORS.findIndex(s => s[1].includes(k)));
   const ink = p => `var(--h${sectorOf(p.kind)})`, tint = p => `var(--t${sectorOf(p.kind)})`;
 
@@ -901,10 +901,6 @@ svg.leaflet-image-layer.leaflet-interactive path {
     ['w5', 'W5', 'Odyssey', 'museum', 'in', 2, 10, 'run', 'Science centre with a storybook under-8s area. Ticket lasts all day.'],
     ['rhyme', 'Rhythm & Rhyme', 'Any Libraries NI branch', 'group', 'in', 0, 10, 'calm', 'Free songs and stories for 0–4s, about 30 minutes. Book ahead. Central Library is Wednesdays at 11.'],
     ['market', 'St George’s Market', 'City centre', 'market', 'in', 0, 5, 'calm', 'Weekend market with live music and plenty to look at.'],
-    ['roar', 'Roar and Explore', 'Belfast', 'play', 'in', 1, 10, 'run', 'Animal-themed soft play with its own under-3s area. Cheaper toddler mornings on weekdays.'],
-    ['grove', 'Grove Wellbeing Centre soft play', 'York Road', 'play', 'in', 1, 10, 'run', 'Safari soft play, about £4. Free Rhythm & Rhyme on Fridays too.'],
-    ['funtastic', 'Funtastic', 'Carryduff', 'play', 'in', 1, 20, 'run', 'Soft play with a toddler area. Cheaper toddler mornings.'],
-    ['airtastic', 'Airtastic soft play', 'Newtownabbey', 'play', 'in', 1, 20, 'run', 'Weekday toddler mornings with juice and biscuits. Walk in, no booking.'],
     ['zoo', 'Belfast Zoo', 'Cave Hill', 'animals', 'out', 2, 15, 'mix', 'Hilly, so take the buggy and go early.'],
     ['streamvale', 'Streamvale Open Farm', 'Dundonald', 'animals', 'both', 1, 20, 'mix', 'Bottle-feed lambs, tractor rides, indoor play. Toddler tickets are cheap. Open spring to autumn, so check.'],
     ['laganvale', 'Laganvale Farm', 'Lisburn', 'animals', 'both', 1, 20, 'mix', 'Farm and soft play. In term time the outdoor bit only opens on Saturdays.'],
@@ -919,7 +915,6 @@ svg.leaflet-image-layer.leaflet-interactive path {
     ['hazelbank', 'Hazelbank Park', 'Newtownabbey', 'beach', 'out', 0, 15, 'run', 'Shore path along the lough with a playground.'],
     ['windowwildlife', 'RSPB Window on Wildlife', 'Belfast Harbour', 'animals', 'both', 1, 15, 'calm', 'Hide with big windows over the lagoon. Birds up close, dry and warm.'],
     ['seapark', 'Seapark', 'Holywood', 'beach', 'out', 0, 15, 'run', 'Seafront playground and paths along the lough.'],
-    ['funkykennedy', 'Funky Monkeys, Kennedy Centre', 'Falls Road', 'play', 'in', 1, 15, 'run', 'Soft play with a separate area for babies and toddlers.'],
     ['wallace', 'Wallace Park', 'Lisburn', 'park', 'out', 0, 20, 'run', 'Big playground, ducks and a café.'],
     ['traintobangor', 'Train ride to Bangor', 'From Lanyon Place', 'other', 'in', 1, 10, 'calm', 'The train is the day out. Bangor is about half an hour along the lough; walk to Pickie at the other end.'],
     ['pickie', 'Pickie Fun Park', 'Bangor', 'park', 'out', 1, 30, 'run', 'Seafront playground and the swan pedalos. Pay per ride.'],
@@ -946,6 +941,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
     state.seeded.push(id);
     state.places.push({ id, name, area, kind, where, cost, mins, energy, note, mine:false, been:[] });
   });
+  state.places = state.places.filter(p => p.kind !== 'play');   // no soft play: he doesn't like it
+  if (state.f.sector === 2) state.f.sector = -1;
   const save = () => { try { localStorage.setItem(LS, JSON.stringify(state)); } catch (e) {} };
   save();
 
@@ -965,12 +962,12 @@ svg.leaflet-image-layer.leaflet-interactive path {
     cost:   [['any', 'any price'], ['free', 'free'], ['cheap', 'cheap']],
     near:   [[0, 'any distance'], [15, 'under 15 min'], [30, 'under 30 min'], [60, 'under an hour']],
     // the last phrase is the colour key: every kind, or one kind in its own colour
-    sector: [[-1, 'every kind'], [0, 'outdoors'], [1, 'animals'], [2, 'soft play'], [3, 'museums'], [4, 'groups'], [5, 'other']],
+    sector: [[-1, 'every kind'], [0, 'outdoors'], [1, 'animals'], [3, 'museums'], [4, 'groups'], [5, 'other']],
   };
   function renderAsk() {
     const kind = () => {
       const i = state.f.sector, o = ASK.sector.find(x => x[0] === i) || ASK.sector[0];
-      const dots = i < 0 ? [0, 1, 2, 3, 4, 5].map(n => `<i style="background:var(--h${n})"></i>`).join('') : `<i style="background:var(--h${i})"></i>`;
+      const dots = i < 0 ? [0, 1, 3, 4, 5].map(n => `<i style="background:var(--h${n})"></i>`).join('') : `<i style="background:var(--h${i})"></i>`;
       return `<button data-k="sector" class="kind ${i < 0 ? 'any' : 'set'}" style="${i < 0 ? '' : `color:var(--h${i});text-decoration-color:var(--h${i})`}" aria-label="Kind: ${o[1]}. Tap to change">${o[1]}<span class="dots">${dots}</span></button>`;
     };
     const b = (k, cap) => { const o = ASK[k].find(x => x[0] === state.f[k]) || ASK[k][0], t = cap ? o[1][0].toUpperCase() + o[1].slice(1) : o[1];
