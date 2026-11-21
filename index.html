@@ -25,7 +25,7 @@
   html { background:var(--bg); }
   body { font:400 15px/1.3 "Helvetica Neue", Helvetica, Arial, sans-serif; color:var(--ink); background:var(--bg); -webkit-font-smoothing:antialiased;
          height:100vh; height:100dvh; overflow:hidden; display:flex; flex-direction:column;
-         padding:calc(16px + env(safe-area-inset-top)) 24px calc(20px + env(safe-area-inset-bottom)); }
+         padding:calc(24px + env(safe-area-inset-top)) 40px calc(24px + env(safe-area-inset-bottom)); }
   button, input, textarea { font:inherit; color:inherit; }
   button { background:none; border:0; padding:0; cursor:pointer; -webkit-tap-highlight-color:transparent; }
   a { color:inherit; }
@@ -41,26 +41,26 @@
   .wx { height:52px; margin-top:4px; display:flex; align-items:center; gap:8px; animation:rise .5s var(--ease) both; }
   .wx svg { width:52px; height:52px; stroke:var(--ink); stroke-width:2.2; fill:none; stroke-linecap:round; stroke-linejoin:round; overflow:visible; }
   .wx .deg { font-size:30px; font-weight:500; letter-spacing:-.04em; }
-  .wx:active { transform:scale(.92); }
 
   /* the sentence: fixed size and a fixed three-line box, so changing a word never moves anything */
-  .ask { flex:none; margin-top:24px; font-size:36px; line-height:1.12; height:3.36em; letter-spacing:-.025em; font-weight:500; max-width:24ch; }
+  .ask { flex:none; width:100%; font-size:34px; line-height:1.12; height:2.24em; letter-spacing:-.025em; font-weight:500; }
   .ask button { font-weight:500; text-decoration:underline; text-decoration-thickness:.07em; text-underline-offset:.12em; text-decoration-color:var(--soft); }
   .ask button.set { text-decoration-color:var(--ink); }
   .ask button:active { opacity:.6; }
   .ask .any { color:var(--soft); }
 
-  .stage { flex:1; min-height:0; margin-top:12px; display:grid; grid-template-columns:minmax(0, 1.1fr) minmax(0, 1fr); grid-template-rows:minmax(0, 1fr); gap:12px 56px; align-items:center; max-width:1280px; width:100%; }
-  .well { height:100%; container-type:size; display:grid; place-items:center; }
-  .rings { position:relative; width:min(100cqw, 100cqh, 680px); aspect-ratio:1; }
+  /* one spacing scale: 8 · 16 · 24 · 40 */
+  .stage { flex:1; min-height:0; margin-top:24px; display:grid; grid-template-columns:minmax(0, 1.1fr) minmax(0, 1fr); grid-template-rows:minmax(0, 1fr); gap:24px 40px; align-items:center; max-width:1280px; width:100%; }
+  .well { height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:24px; }
+  .rings { position:relative; flex:none; width:var(--rs, 320px); aspect-ratio:120 / 98; }
   .rings > svg { width:100%; height:100%; color:var(--ink); touch-action:none; cursor:grab; overflow:hidden; -webkit-user-select:none; user-select:none; }
   .rings > svg.panning { cursor:grabbing; }
   .ring { fill:none; stroke:var(--faint); stroke-width:1px; vector-effect:non-scaling-stroke; }
   .ring.k { stroke:var(--ink); stroke-opacity:.35; }
   .spoke { stroke:var(--faint); stroke-width:1px; vector-effect:non-scaling-stroke; }
   .rl { font-size:calc(4.2px * var(--iz, 1)); fill:var(--soft); font-weight:500; }
-  .sl { font-size:calc(5.4px * var(--iz, 1)); font-weight:700; letter-spacing:.02em; text-transform:uppercase; cursor:pointer; }
-  .sl.off { opacity:.3; }
+  .sl { fill:var(--soft); font-size:calc(5.4px * var(--iz, 1)); font-weight:700; letter-spacing:.02em; text-transform:uppercase; cursor:pointer; }
+  .sl.on { fill:var(--ink); } .sl.off { opacity:.35; }
   .home { fill:var(--ink); }
   .s { transform:scale(var(--iz, 1)); }
   .dot { cursor:pointer; transition:opacity .25s, transform .3s var(--ease); transform-box:fill-box; transform-origin:center; }
@@ -76,12 +76,8 @@
   .sweep { transform-origin:0 0; opacity:0; pointer-events:none; }
   .sweep.go { animation:sweep .75s var(--ease); }
   @keyframes sweep { 0% { opacity:1; transform:rotate(0deg); } 85% { opacity:1; } 100% { opacity:0; transform:rotate(360deg); } }
-  .zoom { position:absolute; right:0; bottom:0; display:flex; flex-direction:column; gap:6px; }
-  .zoom button { width:36px; height:36px; border-radius:50%; background:var(--paper); display:grid; place-items:center; box-shadow:0 0 0 1px var(--faint); }
-  .zoom button:active { transform:scale(.92); }
-
   /* the shelf */
-  .card { background:var(--paper); border-radius:28px; padding:22px 22px 18px; display:flex; flex-direction:column; box-shadow:0 18px 40px -22px var(--lift); max-height:100%; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:none; }
+  .card { background:var(--paper); border-radius:28px; padding:24px; display:flex; flex-direction:column; box-shadow:0 18px 40px -22px var(--lift); max-height:100%; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:none; }
   .card::-webkit-scrollbar { display:none; }
   .meta { display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
   .tag { font-size:11px; font-weight:700; letter-spacing:.01em; padding:3px 8px 3px 7px; border-radius:6px; background:var(--tint); color:var(--c); display:inline-flex; align-items:center; gap:5px; }
@@ -90,17 +86,18 @@
   .card h2 { margin-top:16px; font-size:44px; font-weight:700; line-height:.95; letter-spacing:-.045em; cursor:pointer; }
   .card.idle h2 { color:var(--soft); cursor:default; }
   .where { margin-top:8px; color:var(--soft); }
-  .photos { display:flex; gap:8px; overflow-x:auto; scroll-snap-type:x mandatory; margin:16px -22px 0; padding:0 22px; scrollbar-width:none; touch-action:pan-x; }
+  .photos { display:flex; gap:8px; overflow-x:auto; scroll-snap-type:x mandatory; margin:16px -24px 0; padding:0 24px; scroll-padding:0 24px; scrollbar-width:none; touch-action:pan-x; }
   .photos::-webkit-scrollbar { display:none; }
   .photos img { flex:none; height:150px; width:auto; max-width:240px; min-width:120px; object-fit:cover; border-radius:18px; scroll-snap-align:start; background:var(--faint); animation:rise .4s var(--ease) both; }
-  .credit { margin-top:6px; font-size:11px; color:var(--soft); }
-  .note { margin-top:14px; line-height:1.4; max-width:36ch; }
-  .acts { margin-top:auto; padding-top:32px; display:flex; gap:8px; }
+  .credit { margin-top:8px; font-size:11px; color:var(--soft); }
+  .note { margin-top:16px; line-height:1.4; max-width:36ch; }
+  .acts { margin-top:auto; padding-top:40px; display:flex; gap:8px; }
   .act { height:50px; border-radius:25px; border:1.5px solid var(--ink); display:flex; align-items:center; justify-content:center; gap:8px; font-size:15px; font-weight:500; text-decoration:none; flex:1; }
-  .act.round { width:50px; flex:none; padding:0; border-radius:50%; }
+  .act.round { width:36px; height:36px; flex:none; padding:0; border-radius:50%; border-width:1.25px; }
+  .act.round svg { width:16px; height:16px; }
   .card { position:relative; }
-  .act.corner { position:absolute; top:16px; right:16px; width:44px; height:44px; }
-  .card:not(.idle) .meta { padding-right:52px; min-height:44px; margin-top:-2px; }
+  .act.corner { position:absolute; top:20px; right:20px; }
+  .card:not(.idle) .meta { padding-right:48px; min-height:28px; }
   .act.main { background:var(--ink); color:var(--paper); }
   .act:active { transform:scale(.97); }
   .card.landed > :not(.handle) { animation:rise .4s var(--ease) both; }
@@ -128,47 +125,45 @@
   @keyframes fade { from { opacity:0; } }
 
   @media (max-width:820px) {
-    body { padding:calc(12px + env(safe-area-inset-top)) 14px 0; }
-    .word { font-size:76px; }
-    .ask { margin-top:16px; font-size:22px; max-width:none; }
-    /* the radar keeps its size: the shelf floats over it rather than pushing it around */
-    .stage { grid-template-columns:minmax(0, 1fr); margin-top:6px; padding-bottom:calc(98px + env(safe-area-inset-bottom)); }
-    .zoom { bottom:4px; }
-    .card { position:fixed; left:10px; right:10px; bottom:calc(10px + env(safe-area-inset-bottom)); z-index:10; max-height:min(78dvh, 640px);
-            padding:0 20px 16px; border-radius:30px; box-shadow:0 -6px 40px -12px var(--lift), 0 0 0 1px var(--faint); touch-action:pan-y; }
+    body { padding:calc(16px + env(safe-area-inset-top)) 16px 0; }
+    .word { font-size:72px; }
+    .wx svg { width:44px; height:44px; } .wx .deg { font-size:26px; } .wx { height:44px; }
+    .ask { font-size:22px; }
+    /* the shelf floats over the page, so the radar never changes size */
+    .stage { grid-template-columns:minmax(0, 1fr); margin-top:20px; align-items:start; padding-bottom:calc(104px + env(safe-area-inset-bottom)); }
+    .well { gap:16px; justify-content:flex-start; }
+    .card { position:fixed; left:8px; right:8px; bottom:calc(8px + env(safe-area-inset-bottom)); z-index:10; max-height:min(80dvh, 660px);
+            padding:0 20px 20px; border-radius:32px; box-shadow:0 -8px 40px -16px var(--lift), 0 0 0 1px var(--faint); touch-action:pan-y; }
     .card.drag { transition:none !important; }
     .card.snap { transition:transform .32s var(--ease); }
-    .handle { display:block; position:sticky; top:0; z-index:1; width:calc(100% + 40px); height:26px; margin:0 -20px 2px; background:var(--paper); cursor:grab; }
-    .handle::before { content:""; position:absolute; left:50%; top:10px; width:42px; height:5px; margin-left:-21px; border-radius:3px; background:var(--faint); }
+    .handle { display:block; position:sticky; top:0; z-index:1; width:calc(100% + 40px); height:24px; margin:0 -20px 8px; background:var(--paper); cursor:grab; }
+    .handle::before { content:""; position:absolute; left:50%; top:10px; width:40px; height:4px; margin-left:-20px; border-radius:2px; background:var(--faint); }
+    .card.shut { padding-bottom:16px; }
     .card.shut > :not(.handle):not(.peek) { display:none; }
-    .card.shut .peek { display:flex; align-items:center; gap:12px; padding-bottom:2px; }
+    .card.shut .peek { display:flex; align-items:center; gap:16px; margin-top:-4px; }
     .peek .pn { flex:1; font-size:20px; font-weight:700; letter-spacing:-.03em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .card.idle .peek .pn { color:var(--soft); font-weight:500; }
-    .peek .act.round { width:44px; height:44px; }
-    .card h2 { font-size:34px; margin-top:10px; }
-    .act.corner { top:30px; right:16px; }
+    .card h2 { font-size:34px; margin-top:16px; }
+    .act.corner { top:32px; right:20px; }
     .card.shut .act.corner { display:none; }
-    .photos { margin:14px -20px 0; padding:0 20px; }
+    .photos { margin:16px -20px 0; padding:0 20px; scroll-padding:0 20px; }
     .photos img { height:132px; }
-    .photos { scroll-padding:0 20px; }
-    .act { height:50px; }
+    .acts { padding-top:32px; }
   }
-  @media (max-width:820px) and (max-height:700px) { .word { font-size:60px; } .ask { margin-top:10px; font-size:19px; } }
+  @media (max-width:820px) and (max-height:700px) { .word { font-size:56px; } .ask { font-size:19px; } .stage { margin-top:8px; } }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation:none !important; transition:none !important; } }
 </style>
 </head>
 <body>
   <header class="mast">
     <h1 class="word">T-Out</h1>
-    <button class="wx" id="wx" hidden></button>
+    <div class="wx" id="wx" role="img" hidden></div>
   </header>
 
-  <p class="ask" id="ask" aria-live="polite"></p>
-
   <main class="stage">
-    <div class="well">
+    <div class="well" id="well">
+      <p class="ask" id="ask" aria-live="polite"></p>
       <figure class="rings" id="rings" aria-label="Places by travel time from home. Drag to move, pinch or scroll to zoom.">
-        <div class="zoom"><button id="zin" aria-label="Zoom in"><svg width="14" height="14" viewBox="0 0 14 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M7 2v10M2 7h10"/></svg></button><button id="zout" aria-label="Zoom out"><svg width="14" height="14" viewBox="0 0 14 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 7h10"/></svg></button></div>
       </figure>
     </div>
     <article class="card idle" id="card" aria-label="Today's pick"></article>
@@ -240,7 +235,7 @@
   const blank = () => ({ v:3, places:[], last:[], f:blankF(), seeded:[] });
   let state;
   try { state = JSON.parse(localStorage.getItem(LS)) || blank(); } catch (e) { state = blank(); }
-  state = Object.assign(blank(), state); state.f = Object.assign(blankF(), state.f);
+  state = Object.assign(blank(), state); state.f = Object.assign(blankF(), state.f, { wx:'any' });   // weather comes fresh from the forecast
   IDEAS.forEach(([id, name, area, kind, where, cost, mins, energy, note]) => {
     if (state.seeded.includes(id)) return;
     state.seeded.push(id);
@@ -267,9 +262,9 @@
     pool:   [['any', 'anywhere'], ['new', 'somewhere new'], ['mine', 'off our list']],
   };
   function renderAsk() {
-    const b = k => { const o = ASK[k].find(x => x[0] === state.f[k]) || ASK[k][0];
-      return `<button data-k="${k}" class="${o[0] === ASK[k][0][0] ? 'any' : 'set'}" aria-label="${k}: ${o[1]}. Tap to change">${o[1]}</button>`; };
-    $('ask').innerHTML = `<span>${b('wx')},</span> <span>${b('energy')},</span> <span>${b('cost')},</span> <span>${b('near')},</span> <span>${b('pool')}.</span>`;
+    const b = (k, cap) => { const o = ASK[k].find(x => x[0] === state.f[k]) || ASK[k][0], t = cap ? o[1][0].toUpperCase() + o[1].slice(1) : o[1];
+      return `<button data-k="${k}" class="${o[0] === ASK[k][0][0] ? 'any' : 'set'}" aria-label="${k}: ${o[1]}. Tap to change">${t}</button>`; };
+    $('ask').innerHTML = `<span>${b('energy', true)},</span> <span>${b('cost')},</span> <span>${b('near')},</span> <span>${b('pool')}.</span>`;
   }
   $('ask').addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
@@ -291,7 +286,7 @@
   }
 
   // ---------- rings ----------
-  const RMAX = 92, BASE = 126;
+  const RMAX = 92, HX = 120, HY = 98;   // the drawing is wider than tall: labels sit left and right
   const R = m => RMAX * Math.min(1, (Math.log(Math.max(m, 4)) - Math.log(4)) / (Math.log(100) - Math.log(4)));
   const pos = p => {
     const w = 2 * Math.PI / SECTORS.length, a = -Math.PI / 2 + sectorOf(p.kind) * w + w * (0.12 + 0.76 * hash(p.id));
@@ -302,9 +297,9 @@
   let svg, dotsG, sweep;
   const view = { z:1, x:0, y:0 };
   function applyView() {
-    const w = 2 * BASE / view.z, lim = BASE - w / 2;
-    view.x = Math.max(-lim, Math.min(lim, view.x)); view.y = Math.max(-lim, Math.min(lim, view.y));
-    svg.setAttribute('viewBox', `${view.x - w / 2} ${view.y - w / 2} ${w} ${w}`);
+    const w = 2 * HX / view.z, h = 2 * HY / view.z, lx = HX - w / 2, ly = HY - h / 2;
+    view.x = Math.max(-lx, Math.min(lx, view.x)); view.y = Math.max(-ly, Math.min(ly, view.y));
+    svg.setAttribute('viewBox', `${view.x - w / 2} ${view.y - h / 2} ${w} ${h}`);
     svg.style.setProperty('--iz', 1 / view.z);
     svg.classList.toggle('names', view.z >= 2.2);
   }
@@ -312,10 +307,10 @@
     const z = Math.max(1, Math.min(7, view.z * f)), k = view.z / z;
     view.x = ux - (ux - view.x) * k; view.y = uy - (uy - view.y) * k; view.z = z; applyView();
   }
-  const toUser = (cx, cy) => { const r = svg.getBoundingClientRect(), w = 2 * BASE / view.z; return [view.x + ((cx - r.left) / r.width - .5) * w, view.y + ((cy - r.top) / r.height - .5) * w]; };
+  const toUser = (cx, cy) => { const r = svg.getBoundingClientRect(); return [view.x + ((cx - r.left) / r.width - .5) * 2 * HX / view.z, view.y + ((cy - r.top) / r.height - .5) * 2 * HY / view.z]; };
 
   function buildRings() {
-    svg = el('svg', { viewBox:`${-BASE} ${-BASE} ${2 * BASE} ${2 * BASE}`, role:'group' });
+    svg = el('svg', { viewBox:`${-HX} ${-HY} ${2 * HX} ${2 * HY}`, role:'group' });
     [10, 20, 30, 60, 90].forEach(m => {
       el('circle', { r:R(m), class:'ring' + (m === 30 ? ' k' : '') }, svg);
       el('text', { x:1.5, y:-R(m) - 1.2, class:'rl' }, svg).textContent = m >= 90 ? '90+' : m + '′';
@@ -324,7 +319,7 @@
     SECTORS.forEach(([name], i) => {
       const a = -Math.PI / 2 + i * w, m = a + w / 2;
       el('line', { x1:0, y1:0, x2:RMAX * Math.cos(a), y2:RMAX * Math.sin(a), class:'spoke' }, svg);
-      const t = el('text', { x:(RMAX + 10) * Math.cos(m), y:(RMAX + 10) * Math.sin(m) + 2, 'text-anchor':'middle', class:'sl', 'data-s':i, tabindex:0, role:'button', style:`fill:var(--h${i})` }, svg);
+      const t = el('text', { x:(RMAX + 10) * Math.cos(m), y:(RMAX + 10) * Math.sin(m) + 2, 'text-anchor':'middle', class:'sl', 'data-s':i, tabindex:0, role:'button' }, svg);
       t.textContent = name;
     });
     sweep = el('g', { class:'sweep' }, svg);
@@ -344,7 +339,7 @@
     svg.addEventListener('pointermove', e => {
       if (!pts.has(e.pointerId)) return;
       pts.set(e.pointerId, [e.clientX, e.clientY]);
-      const r = svg.getBoundingClientRect(), upp = 2 * BASE / start.z / r.width;
+      const r = svg.getBoundingClientRect(), upp = 2 * HX / start.z / r.width;
       if (pts.size === 1 && start.pts.size === 1) {
         const [x0, y0] = [...start.pts.values()][0], dx = e.clientX - x0, dy = e.clientY - y0;
         if (!dragged && Math.hypot(dx, dy) < 6) return;
@@ -361,7 +356,13 @@
     });
     const up = e => { pts.delete(e.pointerId); svg.classList.remove('panning'); start = { x:view.x, y:view.y, z:view.z, pts:new Map(pts) }; };
     svg.addEventListener('pointerup', up); svg.addEventListener('pointercancel', up);
-    svg.addEventListener('wheel', e => { e.preventDefault(); const [ux, uy] = toUser(e.clientX, e.clientY); zoomAt(Math.exp(-e.deltaY * .0025), ux, uy); }, { passive:false });
+    svg.addEventListener('wheel', e => { e.preventDefault(); const [ux, uy] = toUser(e.clientX, e.clientY); zoomAt(Math.exp(-e.deltaY * (e.ctrlKey ? .012 : .0025)), ux, uy); }, { passive:false });
+    // Safari's own pinch events (trackpad and iPhone): use them, and stop the page zooming instead
+    let gz = 1, gc = null;
+    svg.addEventListener('gesturestart', e => { e.preventDefault(); gz = view.z; gc = toUser(e.clientX, e.clientY); }, { passive:false });
+    svg.addEventListener('gesturechange', e => { e.preventDefault(); if (pts.size >= 2) return; view.z = gz; zoomAt(e.scale, ...gc); }, { passive:false });
+    svg.addEventListener('gestureend', e => e.preventDefault(), { passive:false });
+    svg.addEventListener('touchmove', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive:false });
     svg.addEventListener('dblclick', e => { const [ux, uy] = toUser(e.clientX, e.clientY); zoomAt(view.z >= 6 ? 1 / 7 : 2, ux, uy); });
     svg.addEventListener('click', e => {
       if (dragged) return;
@@ -369,8 +370,6 @@
       const d = e.target.closest('.dot'); if (d) select(state.places.find(p => p.id === d.dataset.id), true);
     });
     svg.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.target.dispatchEvent(new MouseEvent('click', { bubbles:true })); } });
-    $('zin').onclick = () => zoomAt(1.6, ...(current ? pos(current) : [view.x, view.y]));
-    $('zout').onclick = () => zoomAt(1 / 1.6);
   }
   function renderRings() {
     dotsG.innerHTML = '';
@@ -387,7 +386,7 @@
         t.textContent = p.name.length > 28 ? p.name.slice(0, 26) + '…' : p.name;
       }
     });
-    svg.querySelectorAll('.sl').forEach((t, i) => t.classList.toggle('off', state.f.sector >= 0 && state.f.sector !== i));
+    svg.querySelectorAll('.sl').forEach((t, i) => { t.classList.toggle('off', state.f.sector >= 0 && state.f.sector !== i); t.classList.toggle('on', state.f.sector === i); });
   }
 
   // ---------- photos (Wikipedia; only where the host allows it) ----------
@@ -456,7 +455,7 @@
     if (cardDragged) return;
     const a = e.target.closest('[data-a]');
     if (!a) return;
-    if (a.dataset.a === 'pick') { if (shut && !current) setShelf(false); pick(); }
+    if (a.dataset.a === 'pick') { if (shut) setShelf(false); pick(); }
     if (a.dataset.a === 'edit') openEdit(current);
   });
   // flick the shelf: up opens it (and picks somewhere if nothing's chosen yet), down tucks it away
@@ -481,7 +480,7 @@
     if (cardDragged) {
       if (!shut && (dy > 60 || v > .5)) setShelf(true);
       else if (shut && (dy < -24 || v < -.3)) { setShelf(false); if (!current) pick(); }
-    } else if (shut) { setShelf(false); if (!current) pick(); }
+    } else if (shut) setShelf(false);
     setTimeout(() => { cardDragged = false; }, 0);
   });
   addEventListener('resize', () => { if (!phone() && shut) setShelf(false); });
@@ -560,7 +559,13 @@
     if (current && (!state.places.includes(current) || !fits(current))) current = null;
     renderAsk(); renderRings(); renderCard();
   }
-  buildRings(); refresh();
+  function sizeRings() {
+    const w = $('well'), gap = parseFloat(getComputedStyle(w).rowGap) || 0;
+    const size = Math.floor(Math.min(w.clientWidth, (w.clientHeight - $('ask').offsetHeight - gap) * HX / HY, 760));
+    document.documentElement.style.setProperty('--rs', Math.max(200, size) + 'px');
+  }
+  addEventListener('resize', sizeRings);
+  buildRings(); refresh(); sizeRings();
 
   // ---------- today's weather: one symbol, from Open-Meteo (no key needed) ----------
   const WX_ICONS = {
@@ -574,27 +579,14 @@
   };
   const wxKind = c => c === 0 ? 'sun' : c <= 2 ? 'part' : c === 3 ? 'cloud' : c <= 48 ? 'fog' : c <= 67 ? 'rain' : c <= 77 ? 'snow' : c <= 82 ? 'rain' : c <= 86 ? 'snow' : 'storm';
   const WX_WORD = { sun:'Sunny', part:'Sunny spells', cloud:'Cloudy', rain:'Rain', snow:'Snow', storm:'Thunder', fog:'Fog' };
-  let wxToday = null;
+  // the forecast decides the weather for the day; the symbol only shows it
   function showWx(w) {
-    wxToday = w; const k = wxKind(w.code), wet = ['rain', 'snow', 'storm'].includes(k) || w.pop >= 60;
-    w.wet = wet;
-    const label = `${WX_WORD[k]}, ${Math.round(w.max)}°${w.pop != null ? `, ${w.pop}% chance of rain` : ''}`;
+    const k = wxKind(w.code), wet = ['rain', 'snow', 'storm'].includes(k) || w.pop >= 60;
     $('wx').innerHTML = `<span class="deg">${Math.round(w.max)}°</span><svg viewBox="0 0 48 48" aria-hidden="true">${WX_ICONS[k]}</svg>`;
-    $('wx').title = label + '. Tap to match the weather.';
-    $('wx').setAttribute('aria-label', `Today: ${label}. Tap to filter for it.`);
+    $('wx').setAttribute('aria-label', `Today in Belfast: ${WX_WORD[k]}, ${Math.round(w.max)}°${w.pop != null ? `, ${w.pop}% chance of rain` : ''}`);
     $('wx').hidden = false;
-    // first look of the day: let the forecast set the weather phrase, unless you've already chosen one
-    if (state.wxSet !== today()) {
-      state.wxSet = today();
-      if (state.f.wx === 'any') { state.f.wx = wet ? 'rain' : 'dry'; save(); refresh(); }
-      else save();
-    }
+    state.f.wx = wet ? 'rain' : 'dry'; refresh();
   }
-  $('wx').addEventListener('click', () => {
-    if (!wxToday) return;
-    const want = wxToday.wet ? 'rain' : 'dry';
-    state.f.wx = state.f.wx === want ? 'any' : want; save(); refresh();
-  });
   (async () => {
     try {
       const c = JSON.parse(localStorage.getItem(LS + '-wx') || 'null');
@@ -606,22 +598,8 @@
       const w = { day:today(), at:Date.now(), code:d.weather_code[0], max:d.temperature_2m_max[0], pop:d.precipitation_probability_max[0] };
       try { localStorage.setItem(LS + '-wx', JSON.stringify(w)); } catch (e) {}
       showWx(w);
-    } catch (e) { manualWx(); }
+    } catch (e) { /* no forecast here: no symbol, and weather doesn't filter */ }
   })();
-  // no forecast (offline, or a host that blocks it): the symbol shows the weather you've told it, tap to change
-  function manualWx() {
-    wxToday = null;
-    const draw = () => {
-      const k = state.f.wx === 'rain' ? 'rain' : state.f.wx === 'dry' ? 'sun' : 'part';
-      $('wx').innerHTML = `<svg viewBox="0 0 48 48" aria-hidden="true">${WX_ICONS[k]}</svg>`;
-      $('wx').setAttribute('aria-label', 'No forecast. Tap to say what the weather is.');
-      $('wx').title = 'No forecast here. Tap to set the weather yourself.';
-      $('wx').hidden = false;
-    };
-    $('wx').onclick = () => { state.f.wx = state.f.wx === 'any' ? 'dry' : state.f.wx === 'dry' ? 'rain' : 'any'; save(); refresh(); draw(); };
-    $('ask').addEventListener('click', draw);
-    draw();
-  }
 }
 </script>
 </body>
