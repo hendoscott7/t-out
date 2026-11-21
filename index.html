@@ -720,9 +720,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
   :root { --sea:#e9e9e6; --land:#fff; --town:#f1f1ef; --road:#cfcfca; }
   @media (prefers-color-scheme: dark) { :root:not([data-theme=light]) { --sea:#161616; --land:#0b0b0b; --town:#1c1c1c; --road:#3a3a38; } }
   :root[data-theme=dark] { --sea:#161616; --land:#0b0b0b; --town:#1c1c1c; --road:#3a3a38; }
-  .leaflet-tile-pane { filter:grayscale(1) contrast(.92) brightness(1.04); }
-  @media (prefers-color-scheme: dark) { :root:not([data-theme=light]) .leaflet-tile-pane { filter:grayscale(1) invert(1) brightness(.85) contrast(.9); } }
-  :root[data-theme=dark] .leaflet-tile-pane { filter:grayscale(1) invert(1) brightness(.85) contrast(.9); }
+  .credit-map { display:flex; align-items:center; gap:6px; flex-direction:row-reverse; }
+  .credit-map button { width:20px; height:20px; border-radius:50%; font:italic 600 11px/20px Georgia, serif; color:var(--soft); background:color-mix(in srgb, var(--bg) 80%, transparent); box-shadow:0 0 0 1px var(--faint); }
+  .credit-map span { display:none; font-size:10px; color:var(--soft); background:color-mix(in srgb, var(--bg) 85%, transparent); padding:3px 8px; border-radius:8px; max-width:220px; }
+  .credit-map.open span { display:block; }
   .g-land { fill:var(--land); stroke:none; } .g-water { fill:var(--sea); stroke:none; } .g-town { fill:var(--town); stroke:none; }
   .g-road { fill:none; stroke:var(--road); stroke-width:1.2; }
   .leaflet-control-attribution { font-size:10px; background:color-mix(in srgb, var(--bg) 75%, transparent) !important; color:var(--soft); }
@@ -965,14 +966,19 @@ svg.leaflet-image-layer.leaflet-interactive path {
   const dark = matchMedia('(prefers-color-scheme: dark)');
   function setTiles() {
     if (tiles) tiles.remove();
-    // OpenStreetMap's own tiles need no key; CSS turns them black and white (and inverts them at night)
-    tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom:19, attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' }).addTo(map);
+    // Esri's grey canvas: quiet base, plus its sparse labels layer turned down a touch. No key needed.
+    const shade = dark.matches ? 'Dark' : 'Light', svc = n => `https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_${shade}_Gray_${n}/MapServer/tile/{z}/{y}/{x}`;
+    tiles = L.layerGroup([L.tileLayer(svc('Base'), { maxZoom:16 }), L.tileLayer(svc('Reference'), { maxZoom:16, opacity:.6 })]).addTo(map);
   }
   function buildMap() {
     if (!window.L) { $('map').innerHTML = '<p class="where" style="padding:24px">The map couldn’t load.</p>'; return; }
-    map = L.map('map', { zoomControl:false, attributionControl:true, zoomSnap:.25 });
-    map.attributionControl.setPosition('topright').setPrefix(false);
+    map = L.map('map', { zoomControl:false, attributionControl:false, zoomSnap:.25, maxZoom:16 });
+    // credit lives behind a small (i) instead of a strip of text
+    const info = L.control({ position:'topright' });
+    info.onAdd = () => { const d = L.DomUtil.create('div', 'credit-map');
+      d.innerHTML = '<button aria-label="Map credits">i</button><span>Map: Esri, HERE, Garmin, © OpenStreetMap contributors · Outline: Natural Earth</span>';
+      L.DomEvent.disableClickPropagation(d); d.querySelector('button').onclick = () => d.classList.toggle('open'); return d; };
+    info.addTo(map);
     map.createPane('base').style.zIndex = 150;
     const draw = (fs, cls) => L.geoJSON(fs, { pane:'base', interactive:false, style:() => ({ className:cls }) }).addTo(map);
     draw(GEO.land, 'g-land'); draw(GEO.urban, 'g-town'); draw(GEO.water, 'g-water'); draw(GEO.roads, 'g-road');
