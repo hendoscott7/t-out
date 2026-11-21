@@ -769,6 +769,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
   .card.landed > :not(.handle) { animation:rise .4s var(--ease) both; }
   @keyframes rise { from { opacity:0; transform:translateY(8px); } }
   .handle, .peek, .scrim { display:none; }
+  .card .peek.start { display:flex !important; align-items:center; gap:16px; }
+  .card .peek.start .pn { flex:1; font-size:20px; font-weight:700; letter-spacing:-.03em; color:var(--ink); }
+  @media (min-width:821px) { .card.idle { padding-top:20px; padding-bottom:20px; } }
 
   /* edit sheet */
   .modal { position:fixed; inset:0; z-index:20; background:rgba(0,0,0,.32); display:flex; align-items:flex-end; justify-content:center; animation:fade .18s; }
@@ -1100,9 +1103,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
     c.classList.toggle('idle', !p); c.classList.remove('landed');
     const peek = `<div class="peek"><span class="pn">${p ? esc(p.name) : n ? 'Where to?' : 'Nothing fits'}</span>${p ? `<button class="act round" data-a="pick" aria-label="Another">${REFRESH}</button>` : ''}</div>`;
     if (!p) {
-      c.innerHTML = HANDLE + peek + `<h2>${n ? 'Where to, Theo?' : 'Nothing fits.'}</h2>
-        <p class="where">${n ? 'Further out means a longer drive.' : 'Tap an underlined word to loosen it.'}</p>
-        <div class="acts"><button class="act main" data-a="pick" ${n ? '' : 'disabled'}>Pick for me</button></div>`;
+      // before the first pick the shelf is just one line: tap the arrow (or pull up) and it chooses
+      c.innerHTML = HANDLE + `<div class="peek start"><span class="pn">${n ? 'Where to?' : 'Nothing fits'}</span>
+        <button class="act round main" data-a="pick" aria-label="Pick somewhere" ${n ? '' : 'disabled'}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5.5 11.5L12 5l6.5 6.5"/></svg></button></div>`;
     } else {
       c.innerHTML = HANDLE + peek + `<div class="meta"><span class="tag" style="--c:${ink(p)};--tint:${tint(p)}">${KINDS[p.kind]}</span><span class="facts">${WHERE[p.where]} · ${COST[p.cost]} · ${minsLabel(p.mins)}</span></div>
         <h2 data-a="edit" title="Edit">${esc(p.name)}</h2>
@@ -1151,7 +1154,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     if (cardDragged) {
       if (!shut && (dy > 60 || v > .5)) setShelf(true);
       else if (shut && (dy < -24 || v < -.3)) { setShelf(false); if (!current) pick(); }
-    } else if (shut) setShelf(false);
+    } else if (shut) { setShelf(false); if (!current) pick(); }
     setTimeout(() => { cardDragged = false; }, 0);
   });
   addEventListener('resize', () => { if (!phone() && shut) setShelf(false); });
