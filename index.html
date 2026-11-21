@@ -799,6 +799,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     .stage { grid-template-columns:minmax(0, 1fr); margin-top:20px; align-items:stretch; }
     .well { gap:16px; }
     /* the map fills the whole screen, under Safari's bars too; everything else floats on it */
+    html, body { overflow:visible; overscroll-behavior:none; }
     .map { position:absolute; left:0; right:0; top:0; height:100lvh; width:auto; margin:0; border-radius:0; }
     .mast, .ask { position:relative; z-index:2; }
     .map .leaflet-top { top:calc(var(--top, 200px) - 48px); }
@@ -926,11 +927,11 @@ svg.leaflet-image-layer.leaflet-interactive path {
     ['armagh', 'Armagh Planetarium', 'Armagh', 'space', 'in', 1, 60, 'calm', 'Under-3s go free. Pick the pre-school dome show; some shows are for over-6s or over-8s. Book ahead.'],
   ];
 
-  const blankF = () => ({ wx:'dry', energy:'any', cost:'any', near:0, pool:'any', sector:-1 });
+  const blankF = () => ({ wx:'any', energy:'any', cost:'any', near:0, pool:'any', sector:-1 });
   const blank = () => ({ v:3, places:[], last:[], f:blankF(), seeded:[] });
   let state;
   try { state = JSON.parse(localStorage.getItem(LS)) || blank(); } catch (e) { state = blank(); }
-  state = Object.assign(blank(), state); state.f = Object.assign(blankF(), state.f, { wx:'dry', pool:'any' });   // weather comes fresh from the forecast
+  state = Object.assign(blank(), state); state.f = Object.assign(blankF(), state.f, { wx:'any', pool:'any' });   // weather comes fresh from the forecast
   IDEAS.forEach(([id, name, area, kind, where, cost, mins, energy, note]) => {
     if (state.seeded.includes(id)) return;
     state.seeded.push(id);
@@ -950,7 +951,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   // ---------- the sentence ----------
   const ASK = {
-    wx:     [['dry', 'It’s dry'], ['rain', 'It’s raining']],
+    wx:     [['any', 'Rain or shine'], ['dry', 'It’s dry'], ['rain', 'It’s raining']],
     energy: [['any', 'any mood'], ['run', 'run him ragged'], ['calm', 'keep it calm']],
     cost:   [['any', 'any price'], ['free', 'free'], ['cheap', 'cheap']],
     near:   [[0, 'any distance'], [15, 'under 15 min'], [30, 'under 30 min'], [60, 'under an hour']],
@@ -964,7 +965,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       return `<button data-k="sector" class="kind ${i < 0 ? 'any' : 'set'}" style="${i < 0 ? '' : `color:var(--h${i});text-decoration-color:var(--h${i})`}" aria-label="Kind: ${o[1]}. Tap to change">${o[1]}<span class="dots">${dots}</span></button>`;
     };
     const b = (k, cap) => { const o = ASK[k].find(x => x[0] === state.f[k]) || ASK[k][0], t = cap ? o[1][0].toUpperCase() + o[1].slice(1) : o[1];
-      return `<button data-k="${k}" class="${k === 'wx' || o[0] !== ASK[k][0][0] ? 'set' : 'any'}" aria-label="${k}: ${o[1]}. Tap to change">${t}</button>`; };
+      return `<button data-k="${k}" class="${o[0] !== ASK[k][0][0] ? 'set' : 'any'}" aria-label="${k}: ${o[1]}. Tap to change">${t}</button>`; };
     $('ask').innerHTML = `<span>${b('wx')},</span> <span>${b('energy')},</span> <span>${b('cost')},</span> <span>${b('near')},</span> <span>${kind()}.</span>`;
   }
   $('ask').addEventListener('click', e => {
@@ -1226,6 +1227,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
     renderAsk(); renderMap(); renderCard();
   }
   buildMap(); refresh();
+  // the map runs under Safari's bar, so the page is a touch taller than the screen: stop it scrolling
+  document.addEventListener('touchmove', e => { if (!e.target.closest('.card, .map, .modal')) e.preventDefault(); }, { passive:false });
+  addEventListener('scroll', () => { if (scrollY) scrollTo(0, 0); });
 
   // ---------- today's weather: one symbol, from Open-Meteo (no key needed) ----------
   const WX_ICONS = {
