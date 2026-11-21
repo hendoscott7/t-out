@@ -806,7 +806,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
     .stage { grid-template-columns:minmax(0, 1fr); margin-top:20px; align-items:stretch; }
     .well { gap:16px; }
     /* the map fills the whole screen, under Safari's bars too; everything else floats on it */
-    .map { position:fixed; inset:0; height:auto; width:auto; margin:0; border-radius:0; }
+    /* starts just below the status bar: Safari tints its top bar from whatever touches the top edge, and that should be the page's black, not the map's grey */
+    .map { position:fixed; inset:env(safe-area-inset-top) 0 0 0; height:auto; width:auto; margin:0; border-radius:0; }
     .mast, .ask { position:relative; z-index:2; }
     .map .leaflet-top { top:calc(var(--top, 200px) - 48px); }
     .scrim { display:block; position:fixed; left:0; right:0; top:0; height:var(--top, 200px); z-index:1; pointer-events:none;
