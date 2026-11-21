@@ -756,7 +756,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   .tag { font-size:11px; font-weight:700; letter-spacing:.01em; padding:3px 8px 3px 7px; border-radius:6px; background:var(--tint); color:var(--c); display:inline-flex; align-items:center; gap:5px; }
   .tag::before { content:""; width:6px; height:6px; border-radius:50%; background:currentColor; }
   .facts { font-size:12px; color:var(--soft); font-weight:500; }
-  .card h2 { margin-top:16px; font-size:44px; font-weight:700; line-height:.95; letter-spacing:-.045em; cursor:pointer; }
+  .card h2 { margin-top:16px; font-size:44px; font-weight:700; line-height:.95; letter-spacing:-.045em; }
   .card.idle h2 { color:var(--soft); cursor:default; }
   .where { margin-top:8px; color:var(--soft); }
   .photos { display:flex; gap:8px; overflow-x:auto; scroll-snap-type:x mandatory; margin:16px -24px 0; padding:0 24px; scroll-padding:0 24px; scrollbar-width:none; touch-action:pan-x; }
@@ -1157,7 +1157,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         <button class="act round main" data-a="pick" aria-label="Pick somewhere" ${n ? '' : 'disabled'}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5.5 11.5L12 5l6.5 6.5"/></svg></button></div>`;
     } else {
       c.innerHTML = HANDLE + peek + `<div class="meta"><span class="tag" style="--c:${ink(p)};--tint:${tint(p)}">${SECTORS[sectorOf(p.kind)][0]}</span><span class="facts">${KINDS[p.kind] !== SECTORS[sectorOf(p.kind)][0] ? KINDS[p.kind] + ' · ' : ''}${WHERE[p.where]} · ${COST[p.cost]} · ${minsLabel(p.mins)}</span></div>
-        <h2 data-a="edit" title="Edit">${esc(p.name)}</h2>
+        <h2>${esc(p.name)}</h2>
         <p class="where">${esc([p.area, p.been.length ? 'last went ' + ago(p.been[p.been.length - 1]) : ''].filter(Boolean).join(' · '))}</p>
         <button class="ph" data-a="photos" aria-expanded="false" hidden><span class="phn"></span><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3.5L5 6.5 8 3.5"/></svg></button>
         <div class="photos" hidden></div><p class="credit" hidden></p>
@@ -1180,7 +1180,6 @@ svg.leaflet-image-layer.leaflet-interactive path {
     const a = e.target.closest('[data-a]');
     if (!a) return;
     if (a.dataset.a === 'pick') { if (shut) setShelf(false); pick(); }
-    if (a.dataset.a === 'edit') openEdit(current);
     if (a.dataset.a === 'photos') { state.photosOpen = !state.photosOpen; save(); showPhotos(state.photosOpen); }
   });
   // flick the shelf: up opens it (and picks somewhere if nothing's chosen yet), down tucks it away

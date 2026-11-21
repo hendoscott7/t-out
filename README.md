@@ -15,7 +15,6 @@ Live: https://hendoscott7.github.io/t-out/
 - **The shelf** at the bottom says "Where to?". Pull it up and it picks somewhere, favouring places you haven't been and avoiding recent picks. The map flies to the pick.
   - The open shelf shows the kind, inside/outside, cost and drive time, a note, recent photos taken near the place (Wikimedia Commons, 2018 on), and **Directions** to Google Maps.
   - The round button top right picks another. Pull the shelf down to tuck it away.
-  - Tap the place's name to fix its tags, add a note, log a visit or remove it.
 - **Tap the T-Out name** to start again: filters cleared, nothing picked.
 - **Weather and temperature** top right come from Open-Meteo, a free forecast service that needs no key.
 
