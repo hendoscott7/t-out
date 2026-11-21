@@ -23,6 +23,7 @@
           --h3:#a596f5; --t3:rgba(165,150,245,.16); --h4:#e5c351; --t4:rgba(229,195,81,.15); --h5:#b5b5b0; --t5:rgba(181,181,176,.15); }
   * { box-sizing:border-box; margin:0; min-width:0; }
   html { background:var(--bg); }
+  @media (max-width:820px) { html, body { background:var(--sea, var(--bg)); } }
   body { font:400 15px/1.3 "Helvetica Neue", Helvetica, Arial, sans-serif; color:var(--ink); background:var(--bg); -webkit-font-smoothing:antialiased;
          height:100vh; height:100dvh; overflow:hidden; display:flex; flex-direction:column;
          padding:calc(24px + env(safe-area-inset-top)) 40px calc(24px + env(safe-area-inset-bottom)); }
@@ -752,7 +753,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
   .where { margin-top:8px; color:var(--soft); }
   .photos { display:flex; gap:8px; overflow-x:auto; scroll-snap-type:x mandatory; margin:16px -24px 0; padding:0 24px; scroll-padding:0 24px; scrollbar-width:none; touch-action:pan-x; }
   .photos::-webkit-scrollbar { display:none; }
-  .photos img { flex:none; height:150px; width:auto; max-width:240px; min-width:120px; object-fit:cover; border-radius:18px; scroll-snap-align:start; background:var(--faint); animation:rise .4s var(--ease) both; }
+  .photos a { flex:none; scroll-snap-align:start; }
+  .photos img { display:block; height:96px; width:128px; object-fit:cover; border-radius:14px; scroll-snap-align:start; background:var(--faint); animation:rise .4s var(--ease) both; }
   .credit { margin-top:8px; font-size:11px; color:var(--soft); }
   .note { margin-top:16px; line-height:1.4; max-width:36ch; }
   .acts { margin-top:auto; padding-top:40px; display:flex; gap:8px; }
@@ -766,7 +768,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   .act:active { transform:scale(.97); }
   .card.landed > :not(.handle) { animation:rise .4s var(--ease) both; }
   @keyframes rise { from { opacity:0; transform:translateY(8px); } }
-  .handle, .peek { display:none; }
+  .handle, .peek, .scrim { display:none; }
 
   /* edit sheet */
   .modal { position:fixed; inset:0; z-index:20; background:rgba(0,0,0,.32); display:flex; align-items:flex-end; justify-content:center; animation:fade .18s; }
@@ -796,7 +798,12 @@ svg.leaflet-image-layer.leaflet-interactive path {
     /* the shelf floats over the page, so the radar never changes size */
     .stage { grid-template-columns:minmax(0, 1fr); margin-top:20px; align-items:stretch; }
     .well { gap:16px; }
-    .map { margin:0 -16px; width:auto; border-radius:24px 24px 0 0; }
+    /* the map fills the whole screen, under Safari's bars too; everything else floats on it */
+    .map { position:fixed; left:0; right:0; top:0; height:100lvh; width:auto; margin:0; border-radius:0; }
+    .mast, .ask { position:relative; z-index:2; }
+    .map .leaflet-top { top:calc(var(--top, 200px) - 48px); }
+    .scrim { display:block; position:fixed; left:0; right:0; top:0; height:var(--top, 200px); z-index:1; pointer-events:none;
+             background:linear-gradient(to bottom, var(--bg) 0, var(--bg) calc(100% - 56px), color-mix(in srgb, var(--bg) 0%, transparent)); }
     .card { position:fixed; left:8px; right:8px; bottom:calc(8px + env(safe-area-inset-bottom)); z-index:10; max-height:min(80dvh, 660px);
             padding:0 20px 20px; border-radius:32px; box-shadow:0 -8px 40px -16px var(--lift), 0 0 0 1px var(--faint); touch-action:pan-y; }
     .card.drag { transition:none !important; }
@@ -812,7 +819,6 @@ svg.leaflet-image-layer.leaflet-interactive path {
     .act.corner { top:32px; right:20px; }
     .card.shut .act.corner { display:none; }
     .photos { margin:16px -20px 0; padding:0 20px; scroll-padding:0 20px; }
-    .photos img { height:132px; }
     .acts { padding-top:32px; }
   }
   @media (max-width:820px) and (max-height:700px) { .word { font-size:56px; } .ask { font-size:19px; } .stage { margin-top:8px; } }
@@ -821,6 +827,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 </style>
 </head>
 <body>
+  <div class="scrim" aria-hidden="true"></div>
   <header class="mast">
     <h1 class="word">T-Out</h1>
     <div class="wx" id="wx" role="img" hidden></div>
@@ -974,6 +981,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
     const shade = dark.matches ? 'Dark' : 'Light', svc = n => `https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_${shade}_Gray_${n}/MapServer/tile/{z}/{y}/{x}`;
     tiles = L.layerGroup([L.tileLayer(svc('Base'), { maxZoom:16 }), L.tileLayer(svc('Reference'), { maxZoom:16, opacity:.6 })]).addTo(map);
   }
+  const topH = () => phone() ? $('ask').getBoundingClientRect().bottom + 16 : 0;
+  const botH = () => phone() ? innerHeight - $('card').getBoundingClientRect().top + 8 : 0;
+  function setTop() { document.documentElement.style.setProperty('--top', topH() + 40 + 'px'); map && map.invalidateSize(); }
+  addEventListener('resize', setTop);
   function buildMap() {
     if (!window.L) { $('map').innerHTML = '<p class="where" style="padding:24px">The map couldn’t load.</p>'; return; }
     map = L.map('map', { zoomControl:false, attributionControl:false, zoomSnap:.25, maxZoom:16 });
@@ -989,7 +1000,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
     setTiles(); dark.addEventListener?.('change', setTiles);
     layer = L.layerGroup().addTo(map);
     const near = state.places.filter(p => p.at && p.mins <= 30).map(p => p.at);
-    map.fitBounds(near.length ? near : [[54.55, -6.02], [54.66, -5.83]], { padding:[24, 24] });
+    setTop();
+    map.fitBounds(near.length ? near : [[54.55, -6.02], [54.66, -5.83]], { paddingTopLeft:[24, 24 + topH()], paddingBottomRight:[24, 24 + botH()] });
   }
   function renderMap() {
     if (!map) return;
@@ -1008,38 +1020,39 @@ svg.leaflet-image-layer.leaflet-interactive path {
   function centreOn(p) {
     if (!map || !p.at) return;
     const z = Math.max(map.getZoom(), p.mins > 40 ? 10 : 13);
-    const pt = map.project(p.at, z).add([0, phone() && !shut ? $('card').offsetHeight / 2 : 0]);
+    const pt = map.project(p.at, z).add([0, (botH() - topH()) / 2]);
     map.flyTo(map.unproject(pt, z), z, { duration:.8 });
   }
 
-  // ---------- photos (Wikipedia; only where the host allows it) ----------
+  // ---------- photos: recent ones taken right at the place (Wikimedia Commons; only where the host allows it) ----------
   const PHOTO = {};
-  try { Object.assign(PHOTO, JSON.parse(localStorage.getItem(LS + '-img') || '{}')); } catch (e) {}
-  const STOP = new Set(['park', 'the', 'and', 'belfast', 'country', 'centre', 'play', 'soft', 'farm', 'open', 'trail']);
+  try { Object.assign(PHOTO, JSON.parse(localStorage.getItem(LS + '-img2') || '{}')); } catch (e) {}
+  const C = 'https://commons.wikimedia.org/w/api.php?format=json&origin=*&';
   async function photosFor(p) {
     if (PHOTO[p.id]) return PHOTO[p.id];
-    const words = p.name.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(w => w.length > 3 && !STOP.has(w));
-    const s = await (await fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${q(p)}&srlimit=4&format=json&origin=*`)).json();
-    const hit = (s.query?.search || []).find(r => words.some(w => r.title.toLowerCase().includes(w)));
     let out = { page:null, imgs:[] };
-    if (hit) {
-      const t = hit.title.replace(/ /g, '_');
-      const m = await (await fetch(`https://en.wikipedia.org/api/rest_v1/page/media-list/${encodeURIComponent(t)}`)).json();
-      const imgs = (m.items || []).filter(i => i.type === 'image' && i.srcset && !/\.svg|logo|map|flag|icon|coat|locator|crest|sign/i.test(i.title))
-        .map(i => 'https:' + (i.srcset.find(x => x.scale === '1.5x') || i.srcset[0]).src).slice(0, 6);
-      out = { page:`https://en.wikipedia.org/wiki/${encodeURIComponent(t)}`, imgs };
+    if (p.at) {
+      const g = await (await fetch(C + `action=query&list=geosearch&gscoord=${p.at[0]}%7C${p.at[1]}&gsradius=500&gsnamespace=6&gslimit=50`)).json();
+      const titles = (g.query?.geosearch || []).map(x => x.title).filter(t => /\.jpe?g$/i.test(t)).slice(0, 50);
+      if (titles.length) {
+        const r = await (await fetch(C + `action=query&prop=imageinfo&iiprop=url%7Ctimestamp%7Cextmetadata&iiextmetadatafilter=DateTimeOriginal&iiurlwidth=320&titles=${encodeURIComponent(titles.join('|'))}`)).json();
+        const year = ii => +((ii.extmetadata?.DateTimeOriginal?.value || '').match(/(19|20)\d\d/) || [ii.timestamp?.slice(0, 4)])[0] || 0;
+        const imgs = Object.values(r.query?.pages || {}).map(pg => pg.imageinfo?.[0]).filter(ii => ii && ii.thumburl)
+          .map(ii => ({ src:ii.thumburl, y:year(ii), page:ii.descriptionurl })).filter(i => i.y >= 2018).sort((a, b) => b.y - a.y).slice(0, 4);
+        out = { page:`https://commons.wikimedia.org/wiki/Special:Nearby#/coord/${p.at[0]},${p.at[1]}`, imgs };
+      }
     }
     PHOTO[p.id] = out;
-    try { localStorage.setItem(LS + '-img', JSON.stringify(PHOTO)); } catch (e) {}
+    try { localStorage.setItem(LS + '-img2', JSON.stringify(PHOTO)); } catch (e) {}
     return out;
   }
   function loadPhotos(p) {
     photosFor(p).then(o => {
       if (current !== p || !o.imgs.length) return;
       const box = $('card').querySelector('.photos'); if (!box) return;
-      box.innerHTML = o.imgs.map(u => `<img src="${esc(u)}" alt="" loading="lazy" onerror="this.remove()">`).join('');
+      box.innerHTML = o.imgs.map(i => `<a href="${esc(i.page)}" target="_blank" rel="noopener"><img src="${esc(i.src)}" alt="Photo, ${i.y}" loading="lazy" onerror="this.parentNode.remove()"></a>`).join('');
       box.hidden = false;
-      const c = $('card').querySelector('.credit'); c.innerHTML = `Photos: <a href="${esc(o.page)}" target="_blank" rel="noopener">Wikipedia</a>`; c.hidden = false;
+      const c = $('card').querySelector('.credit'); c.innerHTML = `Recent photos from <a href="${esc(o.page)}" target="_blank" rel="noopener">Wikimedia Commons</a>`; c.hidden = false;
     }).catch(() => {});
   }
 
