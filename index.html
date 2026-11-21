@@ -3,206 +3,218 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#a9cbe8">
 <title>T-Out</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
 <style>
-  :root { color-scheme:light dark; --bg:#fff; --fg:#111; --on:#fff; --mute:#9a9a9a; --panel:#f3f2f0; --line:#e4e2dc; --sky:#a9cbe8;
-          --glass:rgba(255,255,255,.82); --scrim:rgba(17,17,17,.18); --shadow:rgba(0,0,0,.10); --ring:rgba(0,0,0,.05); --hair:rgba(0,0,0,.08); }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg:#0f0f0e; --fg:#f2f1ee; --on:#111; --mute:#7d7c78; --panel:#1c1c1a; --line:#2c2c29;
-            --glass:rgba(28,28,26,.78); --scrim:rgba(0,0,0,.45); --shadow:rgba(0,0,0,.45); --ring:rgba(255,255,255,.06); --hair:rgba(255,255,255,.12); }
-  }
+  :root { --sky:#a9cbe8; --ink:#111; --soft:rgba(17,17,17,.55); --faint:rgba(17,17,17,.16); --paper:#f7f6f2; --ease:cubic-bezier(.65,0,.2,1); }
   * { box-sizing:border-box; margin:0; }
-  body { font:400 15px/1.35 Inter, "Helvetica Neue", Arial, sans-serif; color:var(--fg); background:var(--bg);
-         min-height:100vh; min-height:100dvh; display:flex; flex-direction:column; padding:20px 24px 124px; gap:16px; }
-  .caps { text-transform:uppercase; letter-spacing:.06em; }
-  button, input, textarea, select { font:inherit; color:inherit; }
+  html { background:var(--sky); }
+  body { font:400 15px/1.3 "Helvetica Neue", Helvetica, Arial, sans-serif; color:var(--ink); background:var(--sky);
+         -webkit-font-smoothing:antialiased; min-height:100vh; min-height:100dvh; padding:18px 24px calc(28px + env(safe-area-inset-bottom)); }
+  button, input, textarea { font:inherit; color:inherit; }
   button { background:none; border:0; padding:0; cursor:pointer; -webkit-tap-highlight-color:transparent; }
   a { color:inherit; }
   svg { display:block; }
   [hidden] { display:none !important; }
+  :focus-visible { outline:2px solid var(--ink); outline-offset:3px; border-radius:4px; }
 
-  header { display:flex; justify-content:space-between; align-items:center; }
-  .mark { font-weight:600; font-size:20px; letter-spacing:-.01em; }
-  .actions { display:flex; gap:8px; }
-  .iconbtn { width:44px; height:44px; border-radius:14px; background:var(--panel); display:grid; place-items:center; position:relative; }
-  .iconbtn:active { transform:scale(.94); }
-  .iconbtn.on { background:var(--fg); color:var(--on); }
-  .badge { position:absolute; top:-4px; right:-4px; min-width:18px; height:18px; padding:0 5px; border-radius:9px;
-           background:var(--fg); color:var(--on); font-size:11px; font-weight:600; display:grid; place-items:center; }
-  .iconbtn.on .badge { background:var(--sky); color:#111; }
+  /* masthead */
+  .mast { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; }
+  .word { font-weight:700; font-size:clamp(64px, 13vw, 168px); line-height:.82; letter-spacing:-.06em; margin-left:-.04em; }
+  .side { display:flex; flex-direction:column; align-items:flex-end; gap:10px; padding-top:6px; }
+  .date { font-size:13px; font-weight:500; text-align:right; line-height:1.25; }
+  .tools { display:flex; gap:6px; }
+  .tool { height:36px; padding:0 14px; border:1.5px solid var(--ink); border-radius:18px; font-size:13px; font-weight:500; display:flex; align-items:center; gap:6px; }
+  .tool:active, .tool.on { background:var(--ink); color:var(--sky); }
 
-  /* quick filters */
-  .quick { display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; margin:0 -24px; padding:0 24px; }
-  .quick::-webkit-scrollbar { display:none; }
-  .chip { flex:none; background:var(--panel); border-radius:12px; padding:9px 13px; font-size:14px; white-space:nowrap; transition:background .15s, color .15s; }
-  .chip.on { background:var(--fg); color:var(--on); }
+  /* the sentence */
+  .ask { margin-top:28px; font-size:clamp(24px, 4.2vw, 44px); line-height:1.12; letter-spacing:-.025em; font-weight:500; max-width:22ch; }
+  .ask button { font-weight:500; text-decoration:underline; text-decoration-thickness:.07em; text-underline-offset:.12em;
+                text-decoration-color:var(--soft); transition:text-decoration-color .15s; }
+  .ask button.set { text-decoration-color:var(--ink); }
+  .ask button:active { opacity:.6; }
+  .ask .any { color:var(--soft); }
+  .hint { margin-top:10px; font-size:13px; color:var(--soft); }
 
-  /* pick panel */
-  .panel { background:var(--panel); flex:1; min-height:46vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
-           padding:32px 24px; text-align:center; overflow:hidden; border-radius:16px; position:relative; }
-  #meta { font-size:12px; color:var(--mute); min-height:16px; margin-bottom:14px; }
-  #pick { font-size:clamp(36px, 7vw, 76px); font-weight:500; letter-spacing:-.025em; line-height:1.05; max-width:13ch; }
-  #pick.empty { color:var(--mute); }
-  #area { margin-top:10px; color:var(--mute); font-size:16px; min-height:21px; }
-  #note { margin-top:18px; max-width:32ch; font-size:15px; line-height:1.4; }
-  #go { margin-top:22px; display:inline-flex; align-items:center; gap:8px; padding:11px 16px; border-radius:12px; background:var(--bg); text-decoration:none; font-size:13px; }
-  #pick.shuffle { opacity:.25; filter:blur(1.5px); }
-  #pick.land, .landed { animation:land .35s cubic-bezier(.2,.8,.2,1); }
-  @keyframes land { from { opacity:0; transform:translateY(10px) scale(.98); } to { opacity:1; transform:none; } }
-  .count { position:absolute; bottom:14px; left:0; right:0; font-size:12px; color:var(--mute); }
+  /* stage */
+  .stage { margin-top:24px; display:grid; grid-template-columns:minmax(0, 1.1fr) minmax(0, 1fr); gap:24px 56px; align-items:center; max-width:1280px; }
+  .rings { position:relative; width:100%; max-width:560px; aspect-ratio:1; justify-self:center; }
+  .rings svg { width:100%; height:100%; overflow:visible; }
+  .ring { fill:none; stroke:var(--faint); stroke-width:.5; }
+  .ring.k { stroke:var(--ink); stroke-opacity:.35; }
+  .spoke { stroke:var(--faint); stroke-width:.5; }
+  .rl { font-size:4.2px; fill:var(--soft); font-weight:500; }
+  .sl { font-size:5.4px; font-weight:700; letter-spacing:.02em; text-transform:uppercase; cursor:pointer; }
+  .sl.off { fill-opacity:.3; }
+  .home { fill:var(--ink); }
+  .pin { font-size:5.6px; font-weight:700; letter-spacing:-.01em; paint-order:stroke; stroke:var(--sky); stroke-width:2.4px; stroke-linejoin:round; pointer-events:none; }
+  .dot { cursor:pointer; transition:opacity .25s, transform .3s var(--ease); transform-box:fill-box; transform-origin:center; }
+  .dot circle { fill:var(--ink); stroke:var(--ink); stroke-width:.9; }
+  .dot.been circle { fill:var(--sky); }
+  .dot.out { opacity:.18; }
+  .dot.mine circle.m { fill:none; stroke-width:.6; }
+  .dot:hover { transform:scale(1.5); }
+  .dot.sel { transform:scale(1.9); }
+  .sweep { transform-origin:0 0; opacity:0; }
+  .sweep.go { animation:sweep .75s var(--ease); }
+  @keyframes sweep { 0% { opacity:1; transform:rotate(0deg); } 85% { opacity:1; } 100% { opacity:0; transform:rotate(360deg); } }
+  .halo { fill:none; stroke:var(--ink); stroke-width:.4; opacity:0; transform-box:fill-box; transform-origin:center; }
+  .halo.on { animation:halo 1.6s ease-out 1; opacity:0; }
+  @keyframes halo { from { transform:scale(1); opacity:.9; } to { transform:scale(5); opacity:0; } }
 
-  /* list */
-  #listView { flex:1; }
-  .seg { display:flex; background:var(--panel); border-radius:12px; padding:3px; margin-bottom:14px; }
-  .seg button { flex:1; padding:9px 0; border-radius:10px; font-size:14px; }
-  .seg button.on { background:var(--bg); box-shadow:0 1px 3px var(--shadow); }
-  .group { color:var(--mute); font-size:12px; margin:20px 0 4px; }
-  .rows { list-style:none; padding:0; }
-  .rows li { border-bottom:1px solid var(--line); }
-  .rows button { width:100%; text-align:left; display:flex; align-items:center; gap:12px; padding:13px 0; }
-  .rows .t { flex:1; min-width:0; }
-  .rows .n { font-size:17px; display:flex; align-items:center; gap:8px; }
-  .rows .m { font-size:13px; color:var(--mute); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .rows .dot { width:6px; height:6px; border-radius:50%; background:var(--fg); flex:none; }
-  .rows .dot.check { background:#e5884d; }
-  .rows .been { font-size:12px; color:var(--mute); flex:none; }
-  .empty-list { color:var(--mute); padding:40px 0; text-align:center; }
-
-  /* dock */
-  .dock { position:fixed; left:50%; bottom:20px; transform:translateX(-50%); z-index:10; display:flex; gap:6px; padding:6px;
-          background:var(--glass); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px); border-radius:20px;
-          box-shadow:0 10px 32px var(--shadow), 0 0 0 1px var(--ring); -webkit-user-select:none; user-select:none; }
-  .dock button { background:var(--panel); height:58px; width:66px; border-radius:14px; display:grid; place-items:center; transition:opacity .15s, transform .1s; }
-  .dock button:active { transform:scale(.97); }
-  .dock button:disabled { opacity:.35; cursor:default; }
-  .dock button.on { background:var(--fg); color:var(--on); }
-  .dock #spin { width:150px; background:var(--fg); color:var(--on); font-size:16px; }
+  /* card */
+  .card { background:var(--paper); border-radius:4px; padding:22px 22px 18px; min-height:300px; display:flex; flex-direction:column;
+          box-shadow:0 18px 40px -22px rgba(0,0,0,.45); }
+  .card .meta { display:flex; flex-wrap:wrap; gap:6px; }
+  .tag { font-size:12px; font-weight:500; padding:4px 9px; border:1px solid var(--ink); border-radius:12px; }
+  .tag.fill { background:var(--ink); color:var(--paper); }
+  .card h2 { margin-top:22px; font-size:clamp(34px, 4.6vw, 56px); font-weight:700; line-height:.95; letter-spacing:-.045em; cursor:pointer; }
+  .card .where { margin-top:10px; color:var(--soft); }
+  .card .note { margin-top:16px; line-height:1.4; max-width:34ch; }
+  .card .acts { margin-top:auto; padding-top:24px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; }
+  .act { height:50px; border-radius:25px; border:1.5px solid var(--ink); display:flex; align-items:center; justify-content:center; gap:7px;
+         font-size:14px; font-weight:500; text-decoration:none; }
+  .act.main { background:var(--ink); color:var(--paper); }
+  .act:active { transform:scale(.97); }
+  .act.on { background:var(--sky); }
+  .card.idle h2 { color:var(--soft); cursor:default; }
+  .card.landed > * { animation:rise .4s var(--ease) both; }
+  .card.landed > :nth-child(2) { animation-delay:.04s; } .card.landed > :nth-child(3) { animation-delay:.08s; } .card.landed > :nth-child(4) { animation-delay:.12s; }
+  @keyframes rise { from { opacity:0; transform:translateY(8px); } }
 
   /* sheets */
-  .modal { position:fixed; inset:0; z-index:20; background:var(--scrim); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
-           display:flex; align-items:flex-end; justify-content:center; animation:fade .18s ease; }
-  .sheet { width:min(560px, 100%); max-height:88vh; overflow:auto; background:var(--bg); border-radius:22px 22px 0 0;
-           padding:10px 24px calc(24px + env(safe-area-inset-bottom)); box-shadow:0 -10px 40px var(--shadow), 0 0 0 1px var(--ring); animation:up .28s cubic-bezier(.2,.8,.2,1); }
-  .grab { width:40px; height:4px; border-radius:4px; background:var(--line); margin:0 auto 18px; }
-  .sheet h2 { font-size:28px; font-weight:500; letter-spacing:-.02em; line-height:1.1; margin-bottom:6px; }
-  .sheet h3 { font-size:12px; font-weight:400; color:var(--mute); margin:20px 0 8px; }
-  .sheet p.sub { color:var(--mute); }
+  .modal { position:fixed; inset:0; z-index:20; background:rgba(17,17,17,.28); display:flex; align-items:flex-end; justify-content:center; animation:fade .18s; }
+  .sheet { width:min(620px, 100%); max-height:92vh; overflow:auto; background:var(--paper); border-radius:14px 14px 0 0;
+           padding:12px 24px calc(24px + env(safe-area-inset-bottom)); animation:up .3s var(--ease); }
+  .grab { width:40px; height:4px; border-radius:4px; background:var(--faint); margin:0 auto 18px; }
+  .sheet h2 { font-size:34px; font-weight:700; letter-spacing:-.04em; line-height:1; }
+  .sheet .sub { color:var(--soft); margin-top:8px; line-height:1.4; }
+  .sheet h3 { font-size:12px; font-weight:500; color:var(--soft); margin:22px 0 8px; }
   .opts { display:flex; flex-wrap:wrap; gap:6px; }
-  .field { width:100%; background:var(--panel); border:0; border-radius:12px; padding:12px 14px; outline:none; }
+  .opt { font-size:14px; padding:8px 13px; border:1.5px solid var(--ink); border-radius:18px; }
+  .opt.on { background:var(--ink); color:var(--paper); }
+  .field { width:100%; background:#fff; border:1.5px solid var(--faint); border-radius:8px; padding:12px 14px; outline:none; }
+  .field:focus { border-color:var(--ink); }
   textarea.field { min-height:120px; resize:vertical; font-size:14px; }
-  .done { width:100%; margin-top:22px; padding:16px; border-radius:14px; background:var(--fg); color:var(--on); display:grid; place-items:center; }
-  .row2 { display:flex; gap:8px; margin-top:22px; }
-  .row2 button, .row2 a { flex:1; padding:14px; border-radius:14px; background:var(--panel); display:grid; place-items:center; text-decoration:none; font-size:13px; }
-  .row2 .danger { color:#d6453d; }
-  .hint { font-size:13px; color:var(--mute); line-height:1.5; margin-top:10px; }
-  .hint ol { padding-left:18px; }
+  .row { display:flex; gap:6px; margin-top:22px; }
+  .row > * { flex:1; }
+  .danger { color:#c2372f; border-color:#c2372f !important; }
+  .small { font-size:13px; color:var(--soft); line-height:1.5; margin-top:14px; }
+  .small ol { padding-left:18px; }
 
-  .toast { position:fixed; left:50%; bottom:100px; z-index:30; border-radius:12px; transform:translate(-50%,16px); background:var(--fg); color:var(--on);
-           padding:14px 18px; display:flex; gap:18px; opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; font-size:13px; width:max-content; max-width:calc(100vw - 32px); line-height:1.4; }
-  .toast.show { opacity:1; transform:translate(-50%,0); pointer-events:auto; }
-  .toast button { text-decoration:underline; text-underline-offset:3px; }
+  /* index */
+  .seg { display:flex; gap:6px; margin:16px 0 4px; }
+  .idx h4 { font-size:12px; font-weight:500; color:var(--soft); margin:22px 0 2px; display:flex; justify-content:space-between; }
+  .idx ul { list-style:none; padding:0; }
+  .idx li button { width:100%; display:grid; grid-template-columns:1fr auto; gap:2px 12px; text-align:left; padding:11px 0; border-bottom:1px solid var(--faint); }
+  .idx .n { font-size:18px; font-weight:500; letter-spacing:-.01em; display:flex; align-items:center; gap:8px; }
+  .idx .r { font-size:13px; color:var(--soft); text-align:right; align-self:center; white-space:nowrap; }
+  .idx .a { font-size:13px; color:var(--soft); }
+  .idx .o { width:7px; height:7px; border-radius:50%; background:#e2763b; flex:none; }
+  .idx .y { width:7px; height:7px; border-radius:50%; border:1.5px solid var(--ink); flex:none; }
+  .idx.out li { opacity:.35; }
+
+  .toast { position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom)); z-index:30; transform:translate(-50%, 14px); background:var(--ink); color:var(--paper);
+           padding:13px 18px; border-radius:24px; font-size:14px; display:flex; gap:16px; opacity:0; pointer-events:none; transition:opacity .2s, transform .2s;
+           width:max-content; max-width:calc(100vw - 32px); }
+  .toast.show { opacity:1; transform:translate(-50%, 0); pointer-events:auto; }
+  .toast button { text-decoration:underline; text-underline-offset:3px; font-weight:500; }
 
   @keyframes up { from { transform:translateY(100%); } }
   @keyframes fade { from { opacity:0; } }
-  @media (max-width:720px) {
-    body { padding:16px 16px 116px; }
-    .quick { margin:0 -16px; padding:0 16px; }
-    .dock { bottom:16px; }
-    .dock #spin { width:130px; }
+  @media (max-width:820px) {
+    body { padding:14px 16px calc(24px + env(safe-area-inset-bottom)); }
+    .ask { margin-top:22px; max-width:none; }
+    .stage { grid-template-columns:1fr; gap:14px; margin-top:10px; }
+    .rings { max-width:440px; margin:0 -6px; width:calc(100% + 12px); }
+    .card { min-height:0; }
   }
-  @media (prefers-reduced-motion: reduce) { #pick.land, .landed, .sheet, .modal { animation:none; } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation:none !important; transition:none !important; } }
 </style>
 </head>
 <body>
-  <header>
-    <div class="mark">T-Out</div>
-    <div class="actions">
-      <button class="iconbtn" id="openAdd" aria-label="Add places"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
-      <button class="iconbtn" id="openFilters" aria-label="Filters"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg><span class="badge" id="fBadge" hidden></span></button>
+  <header class="mast">
+    <h1 class="word">T-Out</h1>
+    <div class="side">
+      <div class="date" id="date"></div>
+      <div class="tools">
+        <button class="tool" id="openIdx" aria-label="Index of places">Index</button>
+        <button class="tool" id="openAdd" aria-label="Add places"><svg width="12" height="12" viewBox="0 0 12 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 1v10M1 6h10"/></svg>Add</button>
+      </div>
     </div>
   </header>
 
-  <nav class="quick" id="quick"></nav>
+  <p class="ask" id="ask" aria-live="polite"></p>
+  <p class="hint" id="hint"></p>
 
-  <section class="panel" id="pickView">
-    <div id="meta" class="caps"></div>
-    <div id="pick" class="empty">Where to, Theo?</div>
-    <div id="area"></div>
-    <div id="note" hidden></div>
-    <a id="go" class="caps" target="_blank" rel="noopener" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>Open in Maps</a>
-    <div class="count" id="count"></div>
-  </section>
+  <main class="stage">
+    <figure class="rings" id="rings" aria-label="Places by travel time from home"></figure>
+    <article class="card idle" id="card"></article>
+  </main>
 
-  <section id="listView" hidden>
-    <div class="seg" id="seg"><button data-v="all" class="on">All</button><button data-v="mine">Ours</button><button data-v="ideas">Ideas</button></div>
-    <div id="rows"></div>
-  </section>
-
-  <div class="dock caps">
-    <button id="listBtn" aria-label="List"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M5 7h14M5 12h14M5 17h9"/></svg></button>
-    <button id="spin">Pick</button>
-    <button id="been" aria-label="Been" disabled><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5L19.5 7"/></svg></button>
-  </div>
-
-  <!-- filters -->
-  <div class="modal" id="filters" hidden>
+  <!-- index -->
+  <div class="modal" id="idx" hidden>
     <div class="sheet"><div class="grab"></div>
-      <h2>Today</h2><p class="sub">Only pick places that fit.</p>
-      <h3 class="caps">Weather</h3><div class="opts" data-f="wx"></div>
-      <h3 class="caps">Cost</h3><div class="opts" data-f="cost"></div>
-      <h3 class="caps">Travel</h3><div class="opts" data-f="near"></div>
-      <h3 class="caps">Mood</h3><div class="opts" data-f="energy"></div>
-      <h3 class="caps">Kind</h3><div class="opts" data-f="kinds"></div>
-      <h3 class="caps">From</h3><div class="opts" data-f="src"></div>
-      <div class="row2"><button class="caps" id="resetF">Reset</button><button class="caps" data-close style="background:var(--fg);color:var(--on)">Done</button></div>
+      <h2>Index</h2>
+      <div class="seg" id="seg"></div>
+      <div id="idxList"></div>
+      <div class="row"><button class="act main" data-close>Done</button></div>
     </div>
   </div>
 
   <!-- edit -->
   <div class="modal" id="edit" hidden>
     <div class="sheet"><div class="grab"></div>
-      <input class="field" id="eName" style="font-size:22px;font-weight:500" aria-label="Name">
-      <input class="field" id="eArea" placeholder="Area, e.g. Dundonald" style="margin-top:8px" aria-label="Area">
-      <h3 class="caps">Inside or out</h3><div class="opts" data-e="where"></div>
-      <h3 class="caps">Cost</h3><div class="opts" data-e="cost"></div>
-      <h3 class="caps">Travel from home</h3><div class="opts" data-e="mins"></div>
-      <h3 class="caps">Mood</h3><div class="opts" data-e="energy"></div>
-      <h3 class="caps">Kind</h3><div class="opts" data-e="kind"></div>
-      <h3 class="caps">Note</h3><textarea class="field" id="eNote" style="min-height:70px" placeholder="Toddler mornings, bring wellies…"></textarea>
-      <h3 class="caps" id="eBeenH"></h3>
-      <div class="row2"><a class="caps" id="eMap" target="_blank" rel="noopener">Maps</a><button class="caps" id="eBeen">Been today</button><button class="caps danger" id="eDel">Remove</button></div>
-      <button class="done caps" data-close>Done</button>
+      <input class="field" id="eName" style="font-size:24px;font-weight:700;letter-spacing:-.02em" aria-label="Name">
+      <input class="field" id="eArea" placeholder="Area, e.g. Dundonald" style="margin-top:6px" aria-label="Area">
+      <h3>Inside or out</h3><div class="opts" data-e="where"></div>
+      <h3>Cost</h3><div class="opts" data-e="cost"></div>
+      <h3>Travel from home</h3><div class="opts" data-e="mins"></div>
+      <h3>Mood</h3><div class="opts" data-e="energy"></div>
+      <h3>Kind</h3><div class="opts" data-e="kind"></div>
+      <h3>Note</h3><textarea class="field" id="eNote" style="min-height:70px" placeholder="Toddler mornings, bring wellies…"></textarea>
+      <h3 id="eBeenH"></h3>
+      <div class="row"><a class="act" id="eMap" target="_blank" rel="noopener">Maps</a><button class="act" id="eBeen">Been today</button><button class="act danger" id="eDel">Remove</button></div>
+      <div class="row"><button class="act main" data-close>Done</button></div>
     </div>
   </div>
 
-  <!-- add / import -->
+  <!-- add -->
   <div class="modal" id="add" hidden>
     <div class="sheet"><div class="grab"></div>
       <h2>Add places</h2>
-      <p class="sub">Paste your Google “Want to go” export, or just type names, one per line. T-Out guesses the tags; tap a place to fix them.</p>
+      <p class="sub">Paste your Google “Want to go” export, or type names one per line. Tags are guessed; an orange dot in the index means check them.</p>
       <textarea class="field" id="paste" style="margin-top:16px" placeholder="Victoria Park&#10;Streamvale Open Farm&#10;…"></textarea>
-      <div class="row2"><label class="caps" style="flex:1;padding:14px;border-radius:14px;background:var(--panel);display:grid;place-items:center;cursor:pointer">Choose CSV<input type="file" id="file" accept=".csv,text/csv,text/plain" hidden></label><button class="caps" id="doAdd" style="background:var(--fg);color:var(--on)">Add</button></div>
-      <div class="hint"><b>Getting your list out of Google Maps</b><ol><li>takeout.google.com → Deselect all</li><li>Tick <b>Saved</b> → Next → Export</li><li>Open the zip, pick <i>Want to go.csv</i></li></ol></div>
-      <div class="hint" style="margin-top:18px"><b>Backup</b> — your tags live in this browser. <a href="#" id="exportJ">Save a backup</a> · <a href="#" id="importJ">Restore</a><input type="file" id="jfile" accept=".json" hidden></div>
+      <div class="row"><label class="act" style="cursor:pointer">Choose CSV<input type="file" id="file" accept=".csv,text/csv,text/plain" hidden></label><button class="act main" id="doAdd">Add</button></div>
+      <div class="small"><b>From Google Maps</b><ol><li>takeout.google.com → Deselect all</li><li>Tick <b>Saved</b> (not Maps) → Export</li><li>In the zip, choose <i>Want to go.csv</i></li></ol></div>
+      <div class="small">Tags are kept in this browser. <a href="#" id="exportJ">Save a backup</a> · <a href="#" id="importJ">Restore</a><input type="file" id="jfile" accept=".json" hidden></div>
     </div>
   </div>
 
-  <div class="toast caps" id="toast"><span id="toastMsg"></span><button id="toastUndo" hidden>Undo</button></div>
+  <div class="toast" id="toast" role="status"><span id="toastMsg"></span><button id="toastUndo" hidden>Undo</button></div>
 
 <script>
 (() => {
   const $ = id => document.getElementById(id);
   const LS = 't-out';
+  const NS = 'http://www.w3.org/2000/svg';
 
   const KINDS = { park:'Park & playground', woods:'Woods & trails', beach:'Beach', animals:'Animals', play:'Soft play', museum:'Museum', space:'Space', group:'Groups & classes', market:'Market', other:'Other' };
-  const WHERE = { in:'Inside', out:'Outside', both:'Both' };
+  const WHERE = { in:'Inside', out:'Outside', both:'In & out' };
   const COST = ['Free', '£', '££'];
   const MINS = [10, 20, 30, 45, 60, 90];
   const ENERGY = { run:'Run it off', calm:'Calm', mix:'Bit of both' };
+  // the rings are cut into six slices
+  const SECTORS = [
+    ['Outdoors', ['park', 'woods', 'beach']],
+    ['Animals', ['animals']],
+    ['Play', ['play']],
+    ['Museums', ['museum', 'space']],
+    ['Groups', ['group', 'market']],
+    ['Other', ['other']],
+  ];
+  const sectorOf = k => Math.max(0, SECTORS.findIndex(s => s[1].includes(k)));
 
-  // Ideas around Belfast for a ~20-month-old. Travel is rough driving time from the city centre.
-  // [id, name, area, kind, where, cost, mins, energy, note]
   const IDEAS = [
     ['victoria', 'Victoria Park', 'East Belfast', 'park', 'out', 0, 10, 'run', 'Lake full of swans, geese and ducks, plus a big playpark.'],
     ['waterworks', 'Waterworks', 'Antrim Road', 'park', 'out', 0, 10, 'run', 'Ponds for duck spotting and two playgrounds.'],
@@ -232,11 +244,11 @@
     ['armagh', 'Armagh Planetarium', 'Armagh', 'space', 'in', 1, 60, 'calm', 'Under-3s go free. Pick the pre-school dome show; some shows are for over-6s or over-8s. Book ahead.'],
   ];
 
-  const blank = () => ({ v:1, places:[], last:[], f:{ wx:'any', cost:'any', near:0, energy:'any', kinds:[], src:'all' }, list:'all', seeded:[] });
+  const blankF = () => ({ wx:'any', energy:'any', cost:'any', near:0, pool:'any', sector:-1 });
+  const blank = () => ({ v:2, places:[], last:[], f:blankF(), list:'all', seeded:[] });
   let state;
   try { state = JSON.parse(localStorage.getItem(LS)) || blank(); } catch (e) { state = blank(); }
-  state = Object.assign(blank(), state); state.f = Object.assign(blank().f, state.f);
-  // add any ideas we haven't seen before (never re-adds ones you removed)
+  state = Object.assign(blank(), state); state.f = Object.assign(blankF(), state.f);
   IDEAS.forEach(([id, name, area, kind, where, cost, mins, energy, note]) => {
     if (state.seeded.includes(id)) return;
     state.seeded.push(id);
@@ -248,156 +260,205 @@
   const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
   const mapUrl = p => p.url || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name + ' ' + (p.area || '') + ' Northern Ireland')}`;
   const minsLabel = m => m >= 90 ? '90+ min' : m + ' min';
-  const metaOf = p => [KINDS[p.kind], WHERE[p.where], COST[p.cost], minsLabel(p.mins)].join(' · ');
   const today = () => new Date().toISOString().slice(0, 10);
   const ago = d => { const n = Math.round((Date.now() - new Date(d)) / 864e5); return n <= 0 ? 'today' : n === 1 ? 'yesterday' : n < 14 ? n + ' days ago' : n < 60 ? Math.round(n / 7) + ' weeks ago' : Math.round(n / 30) + ' months ago'; };
+  const hash = s => { let h = 2166136261; for (const c of s) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return (h >>> 0) / 4294967296; };
 
-  // ---------- filtering ----------
-  const FOPTS = {
-    wx: { any:'Any', rain:'Raining', dry:'Dry' },
-    cost: { any:'Any', free:'Free only', cheap:'Free or £' },
-    near: { 0:'Any', 15:'≤ 15 min', 30:'≤ 30 min', 60:'≤ 1 hour' },
-    energy: { any:'Any', run:'Run it off', calm:'Calm' },
-    src: { all:'Everything', mine:'Our list', ideas:'Ideas' },
+  // ---------- the sentence ----------
+  // each underlined phrase cycles through its options
+  const ASK = {
+    wx:     [['any', 'Any weather'], ['rain', 'It’s raining'], ['dry', 'It’s dry']],
+    energy: [['any', 'any mood'], ['run', 'run him ragged'], ['calm', 'keep it calm']],
+    cost:   [['any', 'any price'], ['free', 'free'], ['cheap', 'cheap']],
+    near:   [[0, 'any distance'], [15, 'under 15 min'], [30, 'under 30 min'], [60, 'under an hour']],
+    pool:   [['any', 'anywhere'], ['new', 'somewhere new'], ['mine', 'off our list']],
   };
-  function fits(p, f = state.f) {
+  function renderAsk() {
+    const b = k => { const o = ASK[k].find(x => x[0] === state.f[k]) || ASK[k][0];
+      return `<button data-k="${k}" class="${o[0] === ASK[k][0][0] ? 'any' : 'set'}" aria-label="${k}: ${o[1]}, tap to change">${o[1]}</button>`; };
+    $('ask').innerHTML = `${b('wx')}, ${b('energy')}, ${b('cost')}, ${b('near')}, ${b('pool')}.`;
+    const n = state.places.filter(fits).length, sec = state.f.sector >= 0 ? ` · ${SECTORS[state.f.sector][0]} only` : '';
+    $('hint').textContent = `${n} of ${state.places.length} places fit${sec}. Tap the underlined words.`;
+  }
+  $('ask').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    const k = b.dataset.k, opts = ASK[k], i = opts.findIndex(x => x[0] === state.f[k]);
+    state.f[k] = opts[(i + 1) % opts.length][0]; save(); refresh();
+  });
+
+  function fits(p) {
+    const f = state.f;
     if (f.wx === 'rain' && p.where === 'out') return false;
     if (f.wx === 'dry' && p.where === 'in') return false;
     if (f.cost === 'free' && p.cost > 0) return false;
     if (f.cost === 'cheap' && p.cost > 1) return false;
     if (+f.near && p.mins > +f.near) return false;
     if (f.energy !== 'any' && p.energy !== f.energy && p.energy !== 'mix') return false;
-    if (f.kinds.length && !f.kinds.includes(p.kind)) return false;
-    if (f.src === 'mine' && !p.mine) return false;
-    if (f.src === 'ideas' && p.mine) return false;
+    if (f.pool === 'new' && p.been.length) return false;
+    if (f.pool === 'mine' && !p.mine) return false;
+    if (f.sector >= 0 && sectorOf(p.kind) !== f.sector) return false;
     return true;
   }
-  const pool = () => state.places.filter(p => fits(p));
-  const activeCount = () => ['wx', 'cost', 'energy'].filter(k => state.f[k] !== 'any').length + (+state.f.near ? 1 : 0) + (state.f.kinds.length ? 1 : 0) + (state.f.src !== 'all' ? 1 : 0);
 
-  // quick chips: the filters you reach for on a Saturday morning
-  const QUICK = [
-    ['Raining', () => state.f.wx === 'rain', () => state.f.wx = state.f.wx === 'rain' ? 'any' : 'rain'],
-    ['Free', () => state.f.cost === 'free', () => state.f.cost = state.f.cost === 'free' ? 'any' : 'free'],
-    ['Close by', () => +state.f.near === 15, () => state.f.near = +state.f.near === 15 ? 0 : 15],
-    ['Run it off', () => state.f.energy === 'run', () => state.f.energy = state.f.energy === 'run' ? 'any' : 'run'],
-    ['Never been', () => state.f.fresh, () => state.f.fresh = !state.f.fresh],
-    ['Our list', () => state.f.src === 'mine', () => state.f.src = state.f.src === 'mine' ? 'all' : 'mine'],
-  ];
-  const fitsAll = p => fits(p) && (!state.f.fresh || !p.been.length);
-
-  function renderQuick() {
-    $('quick').innerHTML = QUICK.map(([l, on], i) => `<button class="chip ${on() ? 'on' : ''}" data-i="${i}">${l}</button>`).join('');
-    const n = activeCount() + (state.f.fresh ? 1 : 0);
-    $('fBadge').hidden = !n; $('fBadge').textContent = n; $('openFilters').classList.toggle('on', !!n);
-    const c = state.places.filter(fitsAll).length;
-    $('count').textContent = c === state.places.length ? `${c} places` : `${c} of ${state.places.length} places fit`;
+  // ---------- rings ----------
+  const RMAX = 92;
+  const R = m => RMAX * Math.min(1, (Math.log(Math.max(m, 4)) - Math.log(4)) / (Math.log(100) - Math.log(4)));
+  const pos = p => {
+    const s = sectorOf(p.kind), w = 2 * Math.PI / SECTORS.length;
+    const a = -Math.PI / 2 + s * w + w * (0.12 + 0.76 * hash(p.id));
+    const r = Math.max(8, R(p.mins) + (hash(p.id + 'r') - .5) * 6);
+    return [r * Math.cos(a), r * Math.sin(a)];
+  };
+  const el = (t, a, parent) => { const n = document.createElementNS(NS, t); for (const k in a) n.setAttribute(k, a[k]); parent && parent.appendChild(n); return n; };
+  let svg, dotsG, sweep, halo;
+  function buildRings() {
+    svg = el('svg', { viewBox:'-112 -112 224 224', role:'group' });
+    [10, 20, 30, 60, 90].forEach(m => {
+      el('circle', { r:R(m), class:'ring' + (m === 30 ? ' k' : '') }, svg);
+      const t = el('text', { x:1.5, y:-R(m) - 1.2, class:'rl' }, svg); t.textContent = m >= 90 ? '90+' : m + '′';
+    });
+    const w = 2 * Math.PI / SECTORS.length;
+    SECTORS.forEach(([name], i) => {
+      const a = -Math.PI / 2 + i * w;
+      el('line', { x1:0, y1:0, x2:RMAX * Math.cos(a), y2:RMAX * Math.sin(a), class:'spoke' }, svg);
+      const m = a + w / 2, t = el('text', { x:(RMAX + 10) * Math.cos(m), y:(RMAX + 10) * Math.sin(m) + 2, 'text-anchor':'middle', class:'sl', 'data-s':i, tabindex:0, role:'button' }, svg);
+      t.textContent = name;
+    });
+    sweep = el('g', { class:'sweep' }, svg);
+    el('path', { d:`M0 0L${RMAX} 0A${RMAX} ${RMAX} 0 0 0 ${RMAX * Math.cos(-.5)} ${RMAX * Math.sin(-.5)}Z`, fill:'#111', 'fill-opacity':.1 }, sweep);
+    el('line', { x1:0, y1:0, x2:RMAX, y2:0, stroke:'#111', 'stroke-width':.8 }, sweep);
+    dotsG = el('g', {}, svg);
+    halo = el('circle', { r:4, class:'halo' }, svg);
+    el('circle', { r:2.6, class:'home' }, svg);
+    $('rings').appendChild(svg);
+    svg.addEventListener('click', e => {
+      const s = e.target.closest('.sl'); if (s) { const i = +s.dataset.s; state.f.sector = state.f.sector === i ? -1 : i; save(); refresh(); return; }
+      const d = e.target.closest('.dot'); if (d) select(state.places.find(p => p.id === d.dataset.id), true);
+    });
+    svg.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.target.dispatchEvent(new MouseEvent('click', { bubbles:true })); } });
   }
-  $('quick').addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; QUICK[b.dataset.i][2](); save(); refresh(); });
+  function renderRings() {
+    dotsG.innerHTML = '';
+    // draw non-fitting first so fitting dots sit on top
+    [...state.places].sort((a, b) => fits(a) - fits(b)).forEach(p => {
+      const [x, y] = pos(p), ok = fits(p);
+      const at = el('g', { transform:`translate(${x.toFixed(2)} ${y.toFixed(2)})` }, dotsG);
+      const g = el('g', { class:`dot${ok ? '' : ' out'}${p.been.length ? ' been' : ''}${p.mine ? ' mine' : ''}${current === p ? ' sel' : ''}`, 'data-id':p.id,
+        tabindex:ok ? 0 : -1, role:'button', 'aria-label':`${p.name}, ${minsLabel(p.mins)}` }, at);
+      el('circle', { r:2.4 }, g);
+      if (p.mine) el('circle', { r:4.2, class:'m' }, g);
+      el('title', {}, g).textContent = p.name;
+    });
+    if (current) {
+      const [x, y] = pos(current), right = x < 40;
+      const t = el('text', { x:x + (right ? 8 : -8), y:y + 1.8, 'text-anchor':right ? 'start' : 'end', class:'pin' }, dotsG);
+      t.textContent = current.name.length > 26 ? current.name.slice(0, 24) + '…' : current.name;
+    }
+    svg.querySelectorAll('.sl').forEach((t, i) => t.classList.toggle('off', state.f.sector >= 0 && state.f.sector !== i));
+  }
+
+  // ---------- card ----------
+  let current = null;
+  function renderCard(animate) {
+    const c = $('card'), p = current;
+    c.classList.toggle('idle', !p); c.classList.remove('landed');
+    if (!p) {
+      const n = state.places.filter(fits).length;
+      c.innerHTML = `<div class="meta"><span class="tag">${n ? n + ' to choose from' : 'Nothing fits'}</span></div>
+        <h2>${n ? 'Where to, Theo?' : 'Try fewer underlines.'}</h2>
+        <p class="note">Each dot is a place. The further out it sits, the longer the drive. Filled dots are places you haven’t been yet.</p>
+        <div class="acts" style="grid-template-columns:1fr"><button class="act main" data-a="pick" ${n ? '' : 'disabled'}>Pick for me</button></div>`;
+      return;
+    }
+    const went = p.been.includes(today());
+    c.innerHTML = `<div class="meta"><span class="tag fill">${KINDS[p.kind]}</span><span class="tag">${WHERE[p.where]}</span><span class="tag">${COST[p.cost]}</span><span class="tag">${minsLabel(p.mins)}</span></div>
+      <h2 data-a="edit" title="Edit">${esc(p.name)}</h2>
+      <p class="where">${esc([p.area, p.been.length ? 'last went ' + ago(p.been[p.been.length - 1]) : 'never been'].filter(Boolean).join(' · '))}</p>
+      ${p.note ? `<p class="note">${esc(p.note)}</p>` : ''}
+      <div class="acts">
+        <button class="act" data-a="pick" aria-label="Pick another"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.7L20 8.5M20 4v4.5h-4.5"/></svg>Another</button>
+        <a class="act" href="${esc(mapUrl(p))}" target="_blank" rel="noopener">Maps</a>
+        <button class="act main ${went ? 'on' : ''}" data-a="been" style="${went ? 'color:var(--ink)' : ''}">${went ? '✓ Went' : 'We went'}</button>
+      </div>`;
+    if (animate) { void c.offsetWidth; c.classList.add('landed'); }
+  }
+  $('card').addEventListener('click', e => {
+    const a = e.target.closest('[data-a]'); if (!a) return;
+    if (a.dataset.a === 'pick') pick();
+    if (a.dataset.a === 'been') { toggleBeen(current); renderCard(); renderRings(); }
+    if (a.dataset.a === 'edit') openEdit(current);
+  });
+  function select(p, animate) {
+    current = p; renderRings(); renderCard(animate);
+    if (p && animate) { const [x, y] = pos(p); halo.setAttribute('cx', x); halo.setAttribute('cy', y); halo.classList.remove('on'); void halo.getBBox(); halo.classList.add('on'); }
+  }
 
   // ---------- pick ----------
-  let current = null;
   function weight(p) {
-    let w = p.been.length ? 1 : 2.5;           // new places come up more
-    if (p.mine) w *= 1.6;                      // your own list over ideas
+    let w = p.been.length ? 1 : 2.5;
+    if (p.mine) w *= 1.6;
     const i = state.last.indexOf(p.id);
-    if (i > -1) w *= 0.05 + i * 0.12;          // recent picks rarely repeat
+    if (i > -1) w *= 0.05 + i * 0.12;
     if (p.been.length && (Date.now() - new Date(p.been[p.been.length - 1])) < 7 * 864e5) w *= 0.2;
     return w;
   }
-  function choose() {
-    const c = state.places.filter(fitsAll).filter(p => p !== current);
-    if (!c.length) return null;
-    let r = Math.random() * c.reduce((s, p) => s + weight(p), 0);
-    for (const p of c) { r -= weight(p); if (r <= 0) return p; }
-    return c[c.length - 1];
+  let busy = false;
+  function pick() {
+    if (busy) return;
+    const c = state.places.filter(fits).filter(p => p !== current);
+    if (!c.length) { toast(current ? 'That’s the only one that fits' : 'Nothing fits — tap an underline to loosen it'); return; }
+    let r = Math.random() * c.reduce((s, p) => s + weight(p), 0), win = c[c.length - 1];
+    for (const p of c) { r -= weight(p); if (r <= 0) { win = p; break; } }
+    state.last = [win.id, ...state.last.filter(x => x !== win.id)].slice(0, 6); save();
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return select(win, true);
+    busy = true; current = null; renderRings();
+    sweep.classList.remove('go'); void sweep.getBBox(); sweep.classList.add('go');
+    setTimeout(() => { busy = false; select(win, true); }, 700);
   }
-  function show(p, animate) {
-    current = p;
-    $('been').disabled = !p;
-    const pk = $('pick');
-    if (!p) {
-      pk.className = 'empty'; pk.textContent = state.places.filter(fitsAll).length ? 'Where to, Theo?' : 'Nothing fits. Loosen a filter?';
-      ['meta', 'area'].forEach(k => $(k).textContent = ''); $('note').hidden = $('go').hidden = true; return;
-    }
-    pk.className = animate ? 'land' : ''; pk.textContent = p.name;
-    $('meta').textContent = metaOf(p);
-    $('area').textContent = [p.area, p.been.length ? 'last went ' + ago(p.been[p.been.length - 1]) : 'never been'].filter(Boolean).join(' · ');
-    $('note').hidden = !p.note; $('note').textContent = p.note || '';
-    $('go').hidden = false; $('go').href = mapUrl(p);
-    $('been').classList.toggle('on', p.been.includes(today()));
-  }
-  let spinning = false;
-  $('spin').addEventListener('click', () => {
-    if (!$('listView').hidden) setView('pick');
-    if (spinning) return;
-    const final = choose();
-    if (!final) { show(null); toast('Nothing fits those filters'); return; }
-    spinning = true;
-    const names = state.places.filter(fitsAll).map(p => p.name);
-    let n = 0; const pk = $('pick'); pk.className = 'shuffle';
-    const t = setInterval(() => {
-      pk.textContent = names[Math.floor(Math.random() * names.length)];
-      if (++n > 9) {
-        clearInterval(t); spinning = false;
-        state.last = [final.id, ...state.last.filter(x => x !== final.id)].slice(0, 6); save();
-        show(final, true);
-      }
-    }, 60);
-  });
-  $('been').addEventListener('click', () => { if (current) { toggleBeen(current); show(current); } });
-  $('pick').addEventListener('click', () => current && openEdit(current));
-
   function toggleBeen(p) {
     const d = today();
     if (p.been.includes(d)) { p.been = p.been.filter(x => x !== d); toast('Unmarked'); }
-    else { p.been.push(d); toast('Nice one. Logged ' + p.name); }
-    save(); renderQuick();
+    else { p.been.push(d); toast('Logged. Nice one'); }
+    save(); renderAsk();
   }
-
-  // ---------- list ----------
-  function setView(v) {
-    $('pickView').hidden = v !== 'pick'; $('listView').hidden = v !== 'list';
-    $('listBtn').classList.toggle('on', v === 'list');
-    if (v === 'list') renderList();
-  }
-  $('listBtn').addEventListener('click', () => setView($('listView').hidden ? 'list' : 'pick'));
-  $('seg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; state.list = b.dataset.v; save(); renderList(); });
-  function renderList() {
-    [...$('seg').children].forEach(b => b.classList.toggle('on', b.dataset.v === state.list));
-    const ps = state.places.filter(p => state.list === 'all' || (state.list === 'mine') === !!p.mine).filter(fitsAll);
-    if (!ps.length) { $('rows').innerHTML = `<p class="empty-list">${state.list === 'mine' ? 'Nothing from your list yet. Tap + to paste it in.' : 'Nothing matches these filters.'}</p>`; return; }
-    $('rows').innerHTML = Object.keys(KINDS).map(k => {
-      const g = ps.filter(p => p.kind === k).sort((a, b) => a.mins - b.mins || a.name.localeCompare(b.name));
-      if (!g.length) return '';
-      return `<div class="group caps">${KINDS[k]} · ${g.length}</div><ul class="rows">${g.map(p => `
-        <li><button data-id="${esc(p.id)}"><span class="t"><span class="n">${p.mine ? `<span class="dot${p.guessed ? ' check' : ''}" title="${p.guessed ? 'Tags guessed — check them' : 'From your list'}"></span>` : ''}${esc(p.name)}</span>
-        <span class="m">${esc([WHERE[p.where], COST[p.cost], minsLabel(p.mins), p.area].filter(Boolean).join(' · '))}</span></span>
-        <span class="been">${p.been.length ? '✓ ' + p.been.length : ''}</span></button></li>`).join('')}</ul>`;
-    }).join('');
-  }
-  $('rows').addEventListener('click', e => { const b = e.target.closest('[data-id]'); if (b) openEdit(state.places.find(p => p.id === b.dataset.id)); });
 
   // ---------- sheets ----------
   const open = id => { $(id).hidden = false; };
-  const close = m => { m.hidden = true; };
   document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => {
-    if (e.target === m || e.target.closest('[data-close]')) { close(m); if (m.id === 'edit') commitEdit(); refresh(); }
+    if (e.target === m || e.target.closest('[data-close]')) { m.hidden = true; if (m.id === 'edit') commitEdit(); refresh(); }
   }));
-
-  function opts(el, map, isOn, onPick) {
-    el.innerHTML = Object.entries(map).map(([k, l]) => `<button class="chip ${isOn(k) ? 'on' : ''}" data-k="${k}">${l}</button>`).join('');
-    el.onclick = e => { const b = e.target.closest('.chip'); if (b) { onPick(b.dataset.k); save(); } };
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    const m = [...document.querySelectorAll('.modal')].find(m => !m.hidden);
+    if (m) { m.hidden = true; if (m.id === 'edit') commitEdit(); refresh(); }
+  });
+  function opts(box, map, isOn, onPick) {
+    box.innerHTML = Object.entries(map).map(([k, l]) => `<button class="opt ${isOn(k) ? 'on' : ''}" data-k="${k}">${l}</button>`).join('');
+    box.onclick = e => { const b = e.target.closest('.opt'); if (b) { onPick(b.dataset.k); save(); } };
   }
-  function renderFilters() {
-    const f = state.f, q = s => document.querySelector(`[data-f="${s}"]`), re = () => { renderFilters(); renderQuick(); };
-    ['wx', 'cost', 'near', 'energy', 'src'].forEach(k => opts(q(k), FOPTS[k], v => String(f[k]) === v, v => { f[k] = k === 'near' ? +v : v; re(); }));
-    opts(q('kinds'), KINDS, k => f.kinds.includes(k), k => { f.kinds = f.kinds.includes(k) ? f.kinds.filter(x => x !== k) : [...f.kinds, k]; re(); });
-  }
-  $('openFilters').addEventListener('click', () => { renderFilters(); open('filters'); });
-  $('resetF').addEventListener('click', () => { state.f = blank().f; save(); renderFilters(); renderQuick(); });
 
-  let editing = null;
+  // index
+  const SEG = { all:'All', mine:'Ours', ideas:'Ideas' };
+  function renderIdx() {
+    opts($('seg'), SEG, k => state.list === k, k => { state.list = k; renderIdx(); });
+    const ps = state.places.filter(p => state.list === 'all' || (state.list === 'mine') === !!p.mine);
+    if (!ps.length) { $('idxList').innerHTML = `<p class="sub" style="margin-top:24px">Nothing from your list yet. Tap Add to paste it in.</p>`; return; }
+    $('idxList').innerHTML = Object.keys(KINDS).map(k => {
+      const g = ps.filter(p => p.kind === k).sort((a, b) => fits(b) - fits(a) || a.mins - b.mins || a.name.localeCompare(b.name));
+      if (!g.length) return '';
+      return `<h4><span>${KINDS[k]}</span><span>${g.length}</span></h4><ul>${g.map(p => `
+        <li style="${fits(p) ? '' : 'opacity:.38'}"><button data-id="${esc(p.id)}">
+          <span class="n">${p.guessed ? '<span class="o" title="Tags guessed — check them"></span>' : p.mine ? '<span class="y" title="From your list"></span>' : ''}${esc(p.name)}</span>
+          <span class="r">${minsLabel(p.mins)} · ${COST[p.cost]}</span>
+          <span class="a">${esc([p.area, WHERE[p.where], p.been.length ? 'been ' + p.been.length + '×' : ''].filter(Boolean).join(' · '))}</span>
+        </button></li>`).join('')}</ul>`;
+    }).join('');
+  }
+  $('openIdx').addEventListener('click', () => { renderIdx(); open('idx'); });
+  $('idxList').addEventListener('click', e => { const b = e.target.closest('[data-id]'); if (!b) return; $('idx').hidden = true; openEdit(state.places.find(p => p.id === b.dataset.id), true); });
+
+  // edit
+  let editing = null, backToIdx = false;
   function renderEdit() {
     const p = editing, q = s => document.querySelector(`[data-e="${s}"]`);
     opts(q('where'), WHERE, k => p.where === k, k => { p.where = k; renderEdit(); });
@@ -409,26 +470,25 @@
     $('eBeen').textContent = p.been.includes(today()) ? 'Unmark today' : 'Been today';
     $('eMap').href = mapUrl(p);
   }
-  function openEdit(p) {
-    editing = p; $('eName').value = p.name; $('eArea').value = p.area || ''; $('eNote').value = p.note || '';
+  function openEdit(p, fromIdx) {
+    editing = p; backToIdx = !!fromIdx; $('eName').value = p.name; $('eArea').value = p.area || ''; $('eNote').value = p.note || '';
     renderEdit(); open('edit');
   }
   function commitEdit() {
     if (!editing) return;
     editing.name = $('eName').value.trim() || editing.name; editing.area = $('eArea').value.trim(); editing.note = $('eNote').value.trim();
-    delete editing.guessed; save();
-    if (current === editing) show(current);
-    editing = null;
+    delete editing.guessed; save(); editing = null;
+    if (backToIdx) { renderIdx(); open('idx'); }
   }
   $('eBeen').addEventListener('click', () => { toggleBeen(editing); renderEdit(); });
   $('eDel').addEventListener('click', () => {
     const p = editing, i = state.places.indexOf(p); editing = null;
-    state.places.splice(i, 1); save(); close($('edit'));
-    if (current === p) show(null);
+    state.places.splice(i, 1); save(); $('edit').hidden = true;
+    if (current === p) current = null;
     refresh(); toast('Removed ' + p.name, () => { state.places.splice(i, 0, p); save(); refresh(); });
   });
 
-  // ---------- import ----------
+  // add / import
   function guess(name, note = '') {
     const s = (name + ' ' + note).toLowerCase();
     const g = { kind:'other', where:'both', cost:1, mins:20, energy:'mix' };
@@ -462,14 +522,10 @@
   function addFrom(text) {
     text = text.replace(/^﻿/, '').trim(); if (!text) return 0;
     let items;
-    const first = text.split(/\r?\n/)[0].toLowerCase();
-    if (/(^|,)\s*title\s*(,|$)/.test(first)) {
-      const [h, ...rows] = parseCSV(text), hl = h.map(x => x.trim().toLowerCase());
-      const ix = k => hl.indexOf(k);
+    if (/(^|,)\s*title\s*(,|$)/.test(text.split(/\r?\n/)[0].toLowerCase())) {
+      const [h, ...rows] = parseCSV(text), hl = h.map(x => x.trim().toLowerCase()), ix = k => hl.indexOf(k);
       items = rows.map(r => ({ name:(r[ix('title')] || '').trim(), note:[r[ix('note')], r[ix('comment')]].filter(x => x && x.trim()).join(' — '), url:(r[ix('url')] || '').trim() }));
-    } else {
-      items = text.split(/\r?\n/).map(l => ({ name:l.replace(/^[-•*\d.)\s]+/, '').trim(), note:'', url:'' }));
-    }
+    } else items = text.split(/\r?\n/).map(l => ({ name:l.replace(/^[-•*\d.)\s]+/, '').trim(), note:'', url:'' }));
     let n = 0;
     const known = new Set(state.places.map(p => p.name.toLowerCase()));
     items.filter(i => i.name).forEach(i => {
@@ -484,26 +540,21 @@
   $('openAdd').addEventListener('click', () => open('add'));
   $('doAdd').addEventListener('click', () => {
     const n = addFrom($('paste').value); $('paste').value = '';
-    close($('add')); state.f = blank().f; state.list = 'mine'; setView('list'); refresh();
-    toast(n ? `Added ${n}. Orange dot means check the tags` : 'All already here — marked as yours');
+    $('add').hidden = true; state.f = blankF(); state.list = 'mine'; save(); refresh(); renderIdx(); open('idx');
+    toast(n ? `Added ${n}. Orange dots need a quick check` : 'Already here — marked as ours');
   });
-  $('file').addEventListener('change', e => {
-    const f = e.target.files[0]; if (!f) return;
-    f.text().then(t => { $('paste').value = t; e.target.value = ''; $('doAdd').click(); });
-  });
+  $('file').addEventListener('change', e => { const f = e.target.files[0]; if (!f) return; f.text().then(t => { $('paste').value = t; e.target.value = ''; $('doAdd').click(); }); });
   $('exportJ').addEventListener('click', e => {
-    e.preventDefault();
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([JSON.stringify(state, null, 1)], { type:'application/json' }));
-    a.download = `t-out-${today()}.json`; a.click();
+    e.preventDefault(); const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(state, null, 1)], { type:'application/json' })); a.download = `t-out-${today()}.json`; a.click();
   });
   $('importJ').addEventListener('click', e => { e.preventDefault(); $('jfile').click(); });
   $('jfile').addEventListener('change', e => {
     const f = e.target.files[0]; if (!f) return;
-    f.text().then(t => { try { const s = JSON.parse(t); if (!Array.isArray(s.places)) throw 0; state = Object.assign(blank(), s); save(); close($('add')); refresh(); toast('Restored'); } catch (_) { toast('That file isn’t a T-Out backup'); } });
+    f.text().then(t => { try { const s = JSON.parse(t); if (!Array.isArray(s.places)) throw 0; state = Object.assign(blank(), s); state.f = Object.assign(blankF(), s.f); save(); $('add').hidden = true; current = null; refresh(); toast('Restored'); } catch (_) { toast('That isn’t a T-Out backup'); } });
   });
 
-  // ---------- toast ----------
+  // toast
   let tt;
   function toast(msg, undo) {
     $('toastMsg').textContent = msg; $('toastUndo').hidden = !undo;
@@ -512,12 +563,11 @@
   }
 
   function refresh() {
-    renderQuick();
-    if (!$('listView').hidden) renderList();
-    if (current && !state.places.includes(current)) show(null);
-    if (!current) show(null);
+    if (current && (!state.places.includes(current) || !fits(current))) current = null;
+    renderAsk(); renderRings(); renderCard();
   }
-  refresh();
+  $('date').innerHTML = new Date().toLocaleDateString('en-GB', { weekday:'long' }) + '<br>' + new Date().toLocaleDateString('en-GB', { day:'numeric', month:'long' });
+  buildRings(); refresh();
 })();
 </script>
 </body>
