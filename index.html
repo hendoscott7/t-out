@@ -800,7 +800,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     .well { gap:16px; }
     /* the map fills the whole screen, under Safari's bars too; everything else floats on it */
     html, body { overflow:visible; overscroll-behavior:none; }
-    .map { position:absolute; left:0; right:0; top:0; height:100lvh; width:auto; margin:0; border-radius:0; }
+    .map { position:absolute; left:0; right:0; top:0; height:calc(100lvh + 160px); width:auto; margin:0; border-radius:0; }
     .mast, .ask { position:relative; z-index:2; }
     .map .leaflet-top { top:calc(var(--top, 200px) - 48px); }
     .scrim { display:block; position:fixed; left:0; right:0; top:0; height:var(--top, 200px); z-index:1; pointer-events:none;
@@ -1016,7 +1016,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
     tiles = L.layerGroup([L.tileLayer(svc('Base'), { maxZoom:16 }), L.tileLayer(svc('Reference'), { maxZoom:16, opacity:.6 })]).addTo(map);
   }
   const topH = () => phone() ? $('ask').getBoundingClientRect().bottom + 16 : 0;
-  const botH = () => phone() ? innerHeight - $('card').getBoundingClientRect().top + 8 : 0;
+  // space the shelf covers, measured from the bottom of the map (which runs past the screen, under Safari's bar)
+  const botH = () => phone() ? $('map').getBoundingClientRect().bottom - $('card').getBoundingClientRect().top + 8 : 0;
   function setTop() { document.documentElement.style.setProperty('--top', topH() + 40 + 'px'); map && map.invalidateSize(); }
   addEventListener('resize', setTop);
   function buildMap() {
