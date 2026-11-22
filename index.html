@@ -756,7 +756,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   @media (prefers-color-scheme: dark) { :root:not([data-theme=light]) .leaflet-tile-pane { filter:brightness(.9) contrast(1.05); } }
   :root[data-theme=dark] .leaflet-tile-pane { filter:brightness(.9) contrast(1.05); }
   :root { --sea:#c9c9c5; --land:#e2e2df; }
-  .credit-map { display:flex; align-items:center; gap:6px; flex-direction:row-reverse; }
+  .credit-map { display:flex; align-items:center; gap:6px; }
   .credit-map button { width:20px; height:20px; border-radius:50%; font:italic 600 11px/20px Georgia, serif; color:var(--soft); background:color-mix(in srgb, var(--bg) 80%, transparent); box-shadow:0 0 0 1px var(--faint); }
   .credit-map span { display:none; font-size:10px; color:var(--soft); background:color-mix(in srgb, var(--bg) 85%, transparent); padding:3px 8px; border-radius:8px; max-width:220px; }
   .credit-map.open span { display:block; }
@@ -869,7 +869,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     .map { position:fixed; inset:env(safe-area-inset-top) 0 0 0; height:auto; width:auto; margin:0; border-radius:0; }
     .mast, .ask { position:relative; z-index:2; }
     .ask { margin:22px 0 0 !important; width:100% !important; }   /* clear air between the bar and the pills */
-    .map .leaflet-top { top:var(--ctl, 200px); }
+    .map .leaflet-bottom { bottom:var(--cb, 140px); transition:bottom .3s var(--ease); }   /* (i) sits just above the shelf, bottom left */
     .scrim { display:block; position:fixed; left:0; right:0; top:0; height:var(--top, 200px); z-index:1; background:var(--bg); }
     /* same fade at the bottom: a solid strip on the edge (Safari's bar takes its colour) melting up into the map */
     .bscrim { display:block; position:fixed; left:0; right:0; bottom:0; height:env(safe-area-inset-bottom, 0px); z-index:5; background:var(--bg); pointer-events:none; }
@@ -1164,7 +1164,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     if (!window.L) { $('map').innerHTML = '<p class="where" style="padding:24px">The map couldn’t load.</p>'; return; }
     map = L.map('map', { zoomControl:false, attributionControl:false, zoomSnap:.25, maxZoom:16 });
     // credit lives behind a small (i) instead of a strip of text
-    const info = L.control({ position:'topright' });
+    const info = L.control({ position:'bottomleft' });
     info.onAdd = () => { const d = L.DomUtil.create('div', 'credit-map');
       d.innerHTML = '<button aria-label="Map credits">i</button><span>Map: Esri, HERE, Garmin, © OpenStreetMap contributors · Outline: Natural Earth</span>';
       L.DomEvent.disableClickPropagation(d); d.querySelector('button').onclick = () => d.classList.toggle('open'); return d; };
@@ -1205,6 +1205,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   let lastShelf = 0;
   new ResizeObserver(() => {
     const h = $('card').offsetHeight;
+    if (phone()) document.documentElement.style.setProperty('--cb', Math.max(0, botH() - 8 - ($('card').classList.contains('idle') ? h / 2 + 10 : 0)) + 'px');   // level with the round button, or just above the shelf
     if (current && phone() && Math.abs(h - lastShelf) > 8) { lastShelf = h; centreOn(current, true); }
   }).observe($('card'));
   // the logo hops when tapped and bobs while something's on its way
