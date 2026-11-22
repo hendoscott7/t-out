@@ -804,6 +804,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
   .act.fab { flex:none; width:60px !important; height:60px !important; color:var(--ink) !important;
              background:color-mix(in srgb, var(--bg) 42%, transparent) !important; -webkit-backdrop-filter:blur(18px) saturate(1.8); backdrop-filter:blur(18px) saturate(1.8);
              border:0 !important; box-shadow:none !important; }
+  /* light mode: a solid white button with a soft shadow, so it stands out on the grey map */
+  :root:not([data-theme=dark]) .act.fab { background:#fff !important; box-shadow:0 6px 20px -6px rgba(40,30,10,.35) !important; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme=light]) .act.fab { background:color-mix(in srgb, var(--bg) 42%, transparent) !important; box-shadow:none !important; } }
   .act.fab:active, .act.fab.pressed { background:color-mix(in srgb, var(--bg) 70%, transparent) !important; }
   .act.fab svg { width:30px !important; height:30px !important; }
   .card .peek.start { display:flex !important; align-items:center; gap:16px; }
