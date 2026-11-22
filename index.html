@@ -66,6 +66,18 @@
   @media (prefers-color-scheme: dark) { :root:not([data-theme=light]) .ask button { background:color-mix(in srgb, var(--paper) 72%, transparent); -webkit-backdrop-filter:blur(18px) saturate(1.6); backdrop-filter:blur(18px) saturate(1.6); box-shadow:none; } }
   .ask button::first-letter { text-transform:uppercase; }
   .ask .any { color:var(--soft); }
+  /* the filter button sits dead centre in the bar; the pills only show once it's tapped */
+  .mast { position:relative; }
+  .filt { position:absolute; left:50%; top:50%; translate:-50% -50%; width:44px; height:44px; border-radius:50%; display:grid; place-items:center; color:var(--ink); transition:background .15s, transform .1s; }
+  .filt svg { width:24px; height:24px; }
+  .filt:active { transform:scale(.92); }
+  .filt[aria-expanded=true] { background:var(--faint); }
+  .filt i { position:absolute; top:9px; right:8px; width:7px; height:7px; border-radius:50%; background:var(--ink); box-shadow:0 0 0 2px var(--bg); display:none; }
+  .filt.on i { display:block; }
+  html:not(.filters) .ask { display:none !important; }
+  .ask button { animation:pill .28s var(--ease) both; }
+  .ask > span:nth-child(2) button { animation-delay:.04s; } .ask > span:nth-child(3) button { animation-delay:.08s; }
+  @keyframes pill { from { opacity:0; transform:translateY(-6px) scale(.96); } }
   .ask .ic { width:1.15em; height:1.15em; flex:none; }
   .ask .dots { display:inline-flex; gap:0; margin-left:0; vertical-align:middle; position:relative; top:-.06em; }
   .ask .dots i { width:.46em; height:.46em; border-radius:50%; display:block; box-shadow:0 0 0 .06em var(--bg); }
@@ -895,6 +907,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   <div class="bscrim" aria-hidden="true"></div>
   <header class="mast">
     <h1 class="word"><a href="./" id="home" aria-label="T-Out, start again"><svg class="logo" id="logo" viewBox="0 0 64 64" fill="none" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="T-Out"><path d="M7 43l12-5 13 5 13-5 12 5-2 13-11-4-12 5-12-5-11 4z" fill="var(--paper)" stroke="currentColor" stroke-width="2.4"/><path d="M19 38l-1 13M32 43v13M45 38l1 13" stroke="currentColor" stroke-width="1.4" opacity=".45"/><path d="M32 47S18 34 18 23a14 14 0 0 1 28 0c0 11-14 24-14 24z" fill="currentColor"/><rect x="25.6" y="17.5" width="3.6" height="9" rx="1.8" fill="var(--bg)"/><rect x="34.8" y="17.5" width="3.6" height="9" rx="1.8" fill="var(--bg)"/></svg></a></h1>
+    <button class="filt" id="filt" aria-label="Filters" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2.2"/><circle cx="8" cy="17" r="2.2"/></svg><i></i></button>
     <div class="wx" id="wx" role="img" hidden></div>
   </header>
 
@@ -1044,8 +1057,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
       cost: I('<path d="M15.5 6.5A3.5 3.5 0 0 0 9 8.5V17M6.5 12.5h6M6.5 17.5h11"/>') };
     const b = (k, cap) => { const o = ASK[k].find(x => x[0] === state.f[k]) || ASK[k][0], t = o[1][0].toUpperCase() + o[1].slice(1);
       return `<button data-k="${k}" class="${o[0] !== ASK[k][0][0] ? 'set' : 'any'}" aria-label="${k}: ${o[1]}. Tap to change">${k === 'wx' ? ICON[o[0]] : ICON.cost}${t}</button>`; };
+    $('filt').classList.toggle('on', state.f.cost !== 'any' || state.f.sector !== -1);
     $('ask').innerHTML = `<span>${b('wx')}</span> <span>${b('cost')}</span> <span>${kind()}</span>`;
   }
+  $('filt').onclick = () => { const o = document.documentElement.classList.toggle('filters'); $('filt').setAttribute('aria-expanded', o); setTop(); };
   $('ask').addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
     const k = b.dataset.k, o = ASK[k], i = o.findIndex(x => x[0] === state.f[k]);
@@ -1133,7 +1148,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     base = (dark.matches ? L.tileLayer : (u, o) => new (tinted())(u, o))(svc('Base'), { maxZoom:16, crossOrigin:'anonymous', keepBuffer:6, updateWhenZooming:false }).on('load', edgeSoon);
     tiles = L.layerGroup([base, L.tileLayer(svc('Reference'), { maxZoom:16, opacity:.6, keepBuffer:6, updateWhenZooming:false })]).addTo(map);
   }
-  const topH = () => phone() ? $('ask').getBoundingClientRect().bottom + 16 : 0;
+  const topH = () => phone() ? (document.documentElement.classList.contains('filters') ? $('ask').getBoundingClientRect().bottom : document.querySelector('.mast').getBoundingClientRect().bottom + 10) + 16 : 0;
   // space the shelf covers, measured from the bottom of the map (which runs past the screen, under Safari's bar)
   const botH = () => phone() ? $('map').getBoundingClientRect().bottom - $('card').getBoundingClientRect().top + 8 : 0;
   function setTop() { document.documentElement.style.setProperty('--top', document.querySelector('.mast').getBoundingClientRect().bottom + 10 + 'px'); document.documentElement.style.setProperty('--ctl', topH() + 'px'); map && map.invalidateSize(); }
