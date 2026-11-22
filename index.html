@@ -59,15 +59,16 @@
   /* the choices float on the map as three pills */
   .ask { display:flex !important; justify-content:center; gap:8px; height:auto !important; padding:0; }
   .ask > span { display:flex; }
-  .ask button { font-weight:500; padding:.55em 1em; border-radius:999px; white-space:nowrap; color:var(--ink);
+  .ask button { display:inline-flex; align-items:center; gap:.4em; font-size:.86em; font-weight:500; padding:.5em .9em .5em .75em; border-radius:999px; white-space:nowrap; color:var(--ink);
                 background:#fff; box-shadow:0 4px 14px -6px rgba(40,30,10,.35); transition:transform .1s, background .15s; }
   .ask button.any { color:var(--soft); }
   .ask button:active { transform:scale(.96); }
   @media (prefers-color-scheme: dark) { :root:not([data-theme=light]) .ask button { background:color-mix(in srgb, var(--paper) 72%, transparent); -webkit-backdrop-filter:blur(18px) saturate(1.6); backdrop-filter:blur(18px) saturate(1.6); box-shadow:none; } }
   .ask button::first-letter { text-transform:uppercase; }
   .ask .any { color:var(--soft); }
-  .ask .dots { display:inline-flex; gap:0; margin-left:4px; vertical-align:middle; position:relative; top:-.06em; }
-  .ask .dots i { width:.34em; height:.34em; border-radius:50%; display:block; box-shadow:0 0 0 .06em var(--bg); }
+  .ask .ic { width:1.15em; height:1.15em; flex:none; }
+  .ask .dots { display:inline-flex; gap:0; margin-left:0; vertical-align:middle; position:relative; top:-.06em; }
+  .ask .dots i { width:.46em; height:.46em; border-radius:50%; display:block; box-shadow:0 0 0 .06em var(--bg); }
   .ask .dots i + i { margin-left:-.1em; }
 
   /* Leaflet's own styles, inlined so the page carries everything it needs */
@@ -741,7 +742,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   :root { --sea:#e9e9e6; --land:#fff; --town:#f1f1ef; --road:#cfcfca; }
   @media (prefers-color-scheme: dark) { :root:not([data-theme=light]) { --sea:#161616; --land:#0b0b0b; --town:#1c1c1c; --road:#3a3a38; } }
   :root[data-theme=dark] { --sea:#161616; --land:#0b0b0b; --town:#1c1c1c; --road:#3a3a38; }
-  .leaflet-tile-pane { filter:sepia(.12) brightness(.9) contrast(1.06); }   /* light mode: a touch darker and warmer than Esri's grey */
+  .leaflet-tile-pane { filter:none; }   /* light mode: the base tiles are recoloured in JS instead (see TINT) */
   @media (prefers-color-scheme: dark) { :root:not([data-theme=light]) .leaflet-tile-pane { filter:brightness(.9) contrast(1.05); } }
   :root[data-theme=dark] .leaflet-tile-pane { filter:brightness(.9) contrast(1.05); }
   :root { --sea:#c9c9c5; --land:#e2e2df; }
@@ -857,7 +858,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     /* starts just below the status bar: Safari tints its top bar from whatever touches the top edge, and that should be the page's black, not the map's grey */
     .map { position:fixed; inset:env(safe-area-inset-top) 0 0 0; height:auto; width:auto; margin:0; border-radius:0; }
     .mast, .ask { position:relative; z-index:2; }
-    .ask { margin:6px 0 0 !important; width:100% !important; }
+    .ask { margin:22px 0 0 !important; width:100% !important; }   /* clear air between the bar and the pills */
     .map .leaflet-top { top:var(--ctl, 200px); }
     .scrim { display:block; position:fixed; left:0; right:0; top:0; height:var(--top, 200px); z-index:1; background:var(--bg); }
     /* same fade at the bottom: a solid strip on the edge (Safari's bar takes its colour) melting up into the map */
@@ -1033,10 +1034,16 @@ svg.leaflet-image-layer.leaflet-interactive path {
     const kind = () => {
       const i = state.f.sector, o = ASK.sector.find(x => x[0] === i) || ASK.sector[0];
       const dots = i < 0 ? [0, 1, 3, 4, 5].map(n => `<i style="background:var(--h${n})"></i>`).join('') : `<i style="background:var(--h${i})"></i>`;
-      return `<button data-k="sector" class="kind ${i < 0 ? 'any' : 'set'}" style="${i < 0 ? '' : `color:var(--h${i});text-decoration-color:var(--h${i})`}" aria-label="Kind: ${o[1]}. Tap to change">${o[1]}<span class="dots">${dots}</span></button>`;
+      return `<button data-k="sector" class="kind ${i < 0 ? 'any' : 'set'}" style="${i < 0 ? '' : `color:var(--h${i});text-decoration-color:var(--h${i})`}" aria-label="Kind: ${o[1]}. Tap to change"><span class="dots">${dots}</span>${o[1][0].toUpperCase() + o[1].slice(1)}</button>`;
     };
-    const b = (k, cap) => { const o = ASK[k].find(x => x[0] === state.f[k]) || ASK[k][0], t = cap ? o[1][0].toUpperCase() + o[1].slice(1) : o[1];
-      return `<button data-k="${k}" class="${o[0] !== ASK[k][0][0] ? 'set' : 'any'}" aria-label="${k}: ${o[1]}. Tap to change">${t}</button>`; };
+    const I = d => `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+    const ICON = {
+      any: I('<circle cx="9" cy="9" r="3.2"/><path d="M9 2.5v1.3M3.8 9H2.5M4.4 4.4l.9.9M13.6 4.4l-.9.9"/><path d="M8.5 20h8a3.5 3.5 0 0 0 .4-7 5 5 0 0 0-9.4 1A3 3 0 0 0 8.5 20z"/>'),
+      dry: I('<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>'),
+      rain: I('<path d="M7 15h9.5a3.5 3.5 0 0 0 .4-7A5 5 0 0 0 7.5 9 3 3 0 0 0 7 15z"/><path d="M9 18.5l-1 2M13 18.5l-1 2M17 18.5l-1 2"/>'),
+      cost: I('<path d="M15.5 6.5A3.5 3.5 0 0 0 9 8.5V17M6.5 12.5h6M6.5 17.5h11"/>') };
+    const b = (k, cap) => { const o = ASK[k].find(x => x[0] === state.f[k]) || ASK[k][0], t = o[1][0].toUpperCase() + o[1].slice(1);
+      return `<button data-k="${k}" class="${o[0] !== ASK[k][0][0] ? 'set' : 'any'}" aria-label="${k}: ${o[1]}. Tap to change">${k === 'wx' ? ICON[o[0]] : ICON.cost}${t}</button>`; };
     $('ask').innerHTML = `<span>${b('wx')}</span> <span>${b('cost')}</span> <span>${kind()}</span>`;
   }
   $('ask').addEventListener('click', e => {
@@ -1091,11 +1098,11 @@ svg.leaflet-image-layer.leaflet-interactive path {
   function sampleEdge() {
     if (!map || !base) return;
     const x = innerWidth / 2, y = innerHeight - 3;
-    for (const img of $('map').querySelectorAll('.leaflet-tile-pane img.leaflet-tile-loaded')) {
+    for (const img of $('map').querySelectorAll('.leaflet-tile-pane .leaflet-tile-loaded')) {
       const r = img.getBoundingClientRect();
-      if (x < r.left || x >= r.right || y < r.top || y >= r.bottom || !img.naturalWidth) continue;
+      if (x < r.left || x >= r.right || y < r.top || y >= r.bottom || !(img.naturalWidth || img.width)) continue;
       try {
-        px.drawImage(img, (x - r.left) / r.width * img.naturalWidth, (y - r.top) / r.height * img.naturalHeight, 1, 1, 0, 0, 1, 1);
+        px.drawImage(img, (x - r.left) / r.width * (img.naturalWidth || img.width), (y - r.top) / r.height * (img.naturalHeight || img.height), 1, 1, 0, 0, 1, 1);
         const [R, G, B] = px.getImageData(0, 0, 1, 1).data;
         const f = getComputedStyle(img.closest('.leaflet-tile-pane')).filter, b = +(f.match(/brightness\(([\d.]+)/) || [, 1])[1], c = +(f.match(/contrast\(([\d.]+)/) || [, 1])[1];
         const adj = v => Math.round(Math.max(0, Math.min(255, (v * b - 128) * c + 128)));   // match the CSS filter on the tiles
@@ -1105,12 +1112,25 @@ svg.leaflet-image-layer.leaflet-interactive path {
     }
   }
   const marks = new Map();
+  // light mode: Esri's grey canvas mapped by brightness onto faint colour — water blue, greens, warm land, white roads
+  const TINT = [[0,[18,18,20]],[.5,[120,124,128]],[.7,[166,188,204]],[.78,[186,208,224]],[.83,[204,220,206]],[.87,[222,228,208]],[.9,[238,234,222]],[.95,[246,243,234]],[1,[255,254,250]]];
+  const LUT = Array.from({ length:256 }, (_, v) => { const l = v / 255; let i = 1; while (TINT[i][0] < l) i++;
+    const [a, A] = TINT[i - 1], [b, B] = TINT[i], t = (l - a) / (b - a || 1); return A.map((x, k) => Math.round(x + (B[k] - x) * t)); });
+  let Tinted; const tinted = () => Tinted || (Tinted = L.TileLayer.extend({ createTile(c, done) {
+    const cv = document.createElement('canvas'), img = new Image(); cv.width = cv.height = 256;
+    img.crossOrigin = 'anonymous';
+    img.onload = () => { const x = cv.getContext('2d'); x.drawImage(img, 0, 0, 256, 256);
+      try { const d = x.getImageData(0, 0, 256, 256), p = d.data;
+        for (let i = 0; i < p.length; i += 4) { const m = LUT[(p[i] * 54 + p[i + 1] * 183 + p[i + 2] * 19) >> 8]; p[i] = m[0]; p[i + 1] = m[1]; p[i + 2] = m[2]; }
+        x.putImageData(d, 0, 0); } catch (e) {}
+      done(null, cv); };
+    img.onerror = e => done(e, cv); img.src = this.getTileUrl(c); return cv; } }));
   const dark = matchMedia('(prefers-color-scheme: dark)');
   function setTiles() {
     if (tiles) tiles.remove();
     // Esri's grey canvas: quiet base, plus its sparse labels layer turned down a touch. No key needed.
     const shade = dark.matches ? 'Dark' : 'Light', svc = n => `https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_${shade}_Gray_${n}/MapServer/tile/{z}/{y}/{x}`;
-    base = L.tileLayer(svc('Base'), { maxZoom:16, crossOrigin:'anonymous', keepBuffer:6, updateWhenZooming:false }).on('load', edgeSoon);
+    base = (dark.matches ? L.tileLayer : (u, o) => new (tinted())(u, o))(svc('Base'), { maxZoom:16, crossOrigin:'anonymous', keepBuffer:6, updateWhenZooming:false }).on('load', edgeSoon);
     tiles = L.layerGroup([base, L.tileLayer(svc('Reference'), { maxZoom:16, opacity:.6, keepBuffer:6, updateWhenZooming:false })]).addTo(map);
   }
   const topH = () => phone() ? $('ask').getBoundingClientRect().bottom + 16 : 0;
