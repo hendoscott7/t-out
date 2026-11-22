@@ -942,12 +942,12 @@ svg.leaflet-image-layer.leaflet-interactive path {
   const LS = 't-out';
   const NS = 'http://www.w3.org/2000/svg';
 
-  const KINDS = { park:'Park & playground', woods:'Woods & trails', beach:'Beach', animals:'Animals', museum:'Museum', space:'Space', group:'Groups & classes', market:'Market', play:'Soft play', other:'Other' };
+  const KINDS = { park:'Park & playground', woods:'Woods & trails', beach:'Beach', animals:'Animals', museum:'Museum', space:'Space', group:'Groups & classes', market:'Market', play:'Soft play', swim:'Leisure centre', other:'Other' };
   const WHERE = { in:'Inside', out:'Outside', both:'In & out' };
   const COST = ['Free', '£', '££'];
   const MINS = [10, 20, 30, 45, 60, 90];
   const ENERGY = { run:'Run it off', calm:'Calm', mix:'Bit of both' };
-  const SECTORS = [['Outdoors', ['park', 'woods', 'beach']], ['Animals', ['animals']], ['Play', []], ['Museums', ['museum', 'space']], ['Groups', ['group']], ['Other', ['other', 'market', 'play']]];
+  const SECTORS = [['Outdoors', ['park', 'woods', 'beach']], ['Animals', ['animals']], ['Play', []], ['Museums', ['museum', 'space']], ['Groups', ['group']], ['Other', ['other', 'market', 'play', 'swim']]];
   const sectorOf = k => Math.max(0, SECTORS.findIndex(s => s[1].includes(k)));
   const ink = p => `var(--h${sectorOf(p.kind)})`, tint = p => `var(--t${sectorOf(p.kind)})`;
 
@@ -1008,6 +1008,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
     ['portrush', 'West Strand, Portrush', 'North Coast', 'beach', 'out', 0, 80, 'run', 'Wide sandy beach with the town right behind it.'],
     ['portstewart', 'Portstewart Strand', 'North Coast', 'beach', 'out', 1, 85, 'run', 'National Trust beach you can drive onto. Huge, flat, sandy.'],
     ['armagh', 'Armagh Planetarium', 'Armagh', 'space', 'in', 1, 60, 'calm', 'Under-3s go free. Pick the pre-school dome show; some shows are for over-6s or over-8s. Book ahead.'],
+    ['andytown', 'Andersonstown Leisure Centre', 'West Belfast', 'swim', 'in', 1, 15, 'run', 'Little Lagoon toddler pool and an Aqua Play splash area. A water slides ticket gets you into all of it. Family fun swims on weekend mornings.'],
+    ['lisnasharragh', 'Lisnasharragh Leisure Centre', 'East Belfast', 'swim', 'in', 1, 15, 'calm', 'Small, warm confidence pool, 0.64m deep and 31.5°C, made for parent and toddler swims. Check the term-time times first.'],
+    ['leisureplex', 'Lagan Valley LeisurePlex', 'Lisburn', 'swim', 'in', 1, 20, 'run', 'NI’s biggest leisure pool. Aqualand splash play, a lazy river and parent and toddler sessions daily, 10–11am. Under-2s free.'],
   ];
 
   const blankF = () => ({ wx:'any', energy:'any', cost:'any', near:0, pool:'any', sector:-1 });
@@ -1082,6 +1085,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   // ---------- map ----------
   // where each idea is (roughly, to the venue)
   const AT = {
+    andytown:[54.5762,-5.9893], lisnasharragh:[54.5856,-5.8702], leisureplex:[54.5086,-6.0396],
     victoria:[54.6097,-5.8936], waterworks:[54.6215,-5.9395], botanic:[54.5822,-5.9330], ormeau:[54.5839,-5.9137], momowlam:[54.6044,-5.8360],
     dixon:[54.5480,-5.9950], cavehill:[54.6420,-5.9420], gruffalo:[54.5685,-6.0170], minnowburn:[54.5490,-5.9550], crawfordsburn:[54.6640,-5.7270],
     ulstermuseum:[54.5823,-5.9351], folkmuseum:[54.6440,-5.8170], w5:[54.6040,-5.9150], rhyme:[54.6010,-5.9310], market:[54.5960,-5.9220],
