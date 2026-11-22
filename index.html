@@ -72,9 +72,7 @@
   .filt svg { width:26px; height:26px; transition:transform .25s var(--ease); }
   .filt[aria-expanded=true] svg { transform:scaleY(-1); }
   .filt:active { transform:scale(.92); }
-    .filt i { position:absolute; top:8px; right:4px; width:7px; height:7px; border-radius:50%; background:var(--ink); box-shadow:0 0 0 2px var(--bg); display:none; }
-  .filt.on i { display:block; }
-  html:not(.filters) .ask { display:none !important; }
+    html:not(.filters) .ask { display:none !important; }
   .ask button { animation:pill .28s var(--ease) both; }
   .ask > span:nth-child(2) button { animation-delay:.04s; } .ask > span:nth-child(3) button { animation-delay:.08s; }
   @keyframes pill { from { opacity:0; transform:translateY(-6px) scale(.96); } }
@@ -907,7 +905,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   <div class="bscrim" aria-hidden="true"></div>
   <header class="mast">
     <h1 class="word"><a href="./" id="home" aria-label="T-Out, start again"><svg class="logo" id="logo" viewBox="0 0 64 64" fill="none" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="T-Out"><path d="M7 43l12-5 13 5 13-5 12 5-2 13-11-4-12 5-12-5-11 4z" fill="var(--paper)" stroke="currentColor" stroke-width="2.4"/><path d="M19 38l-1 13M32 43v13M45 38l1 13" stroke="currentColor" stroke-width="1.4" opacity=".45"/><path d="M32 47S18 34 18 23a14 14 0 0 1 28 0c0 11-14 24-14 24z" fill="currentColor"/><rect x="25.6" y="17.5" width="3.6" height="9" rx="1.8" fill="var(--bg)"/><rect x="34.8" y="17.5" width="3.6" height="9" rx="1.8" fill="var(--bg)"/></svg></a></h1>
-    <button class="filt" id="filt" aria-label="Filters" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M3.5 6.5h17M6.5 12h11M9.5 17.5h5"/></svg><i></i></button>
+    <button class="filt" id="filt" aria-label="Filters" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M3.5 6.5h17M6.5 12h11M9.5 17.5h5"/></svg></button>
     <div class="wx" id="wx" role="img" hidden></div>
   </header>
 
@@ -1057,7 +1055,6 @@ svg.leaflet-image-layer.leaflet-interactive path {
       cost: I('<path d="M15.5 6.5A3.5 3.5 0 0 0 9 8.5V17M6.5 12.5h6M6.5 17.5h11"/>') };
     const b = (k, cap) => { const o = ASK[k].find(x => x[0] === state.f[k]) || ASK[k][0], t = o[1][0].toUpperCase() + o[1].slice(1);
       return `<button data-k="${k}" class="${o[0] !== ASK[k][0][0] ? 'set' : 'any'}" aria-label="${k}: ${o[1]}. Tap to change">${k === 'wx' ? ICON[o[0]] : ICON.cost}${t}</button>`; };
-    $('filt').classList.toggle('on', state.f.cost !== 'any' || state.f.sector !== -1);
     $('ask').innerHTML = `<span>${b('wx')}</span> <span>${b('cost')}</span> <span>${kind()}</span>`;
   }
   $('filt').onclick = () => { const o = document.documentElement.classList.toggle('filters'); $('filt').setAttribute('aria-expanded', o); setTop(); };
