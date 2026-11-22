@@ -1213,7 +1213,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   $('logo').addEventListener('animationend', e => e.animationName === 'hop' && $('logo').classList.remove('hop'));
   function centreOn(p, keepZoom) {
     if (!map || !p.at) return;
-    const z = keepZoom ? map.getZoom() : Math.max(map.getZoom(), p.mins > 40 ? 10 : 13);
+    const z = map.getZoom();   // never zoom in on a pick: just glide over to it at the zoom you're already at
     const pt = map.project(p.at, z).add([0, (botH() - topH()) / 2]);
     const to = map.unproject(pt, z), c = map.getSize(), d = map.project(to, map.getZoom()).subtract(map.project(map.getCenter(), map.getZoom()));
     const near = z === map.getZoom() && Math.abs(d.x) < c.x * .9 && Math.abs(d.y) < c.y * .9;
